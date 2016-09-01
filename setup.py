@@ -44,7 +44,7 @@ class PyTest(TestCommand):
 
 setup(
     name='cglims',
-    version='0.0.1',
+    version='1.0.0-beta1',
     description='Microservice to interface with LIMS',
     author='Robin Andeer',
     author_email='robin.andeer@scilifelab.se',
