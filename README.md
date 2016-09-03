@@ -1,4 +1,4 @@
-# CGLims [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
+# CGLims [![Build Status][travis-image]][travis-url]
 
 _cglims_ is a tool to interface with our instance of Genologics Clarity LIMS.
 
@@ -75,6 +75,3 @@ N.B. If a sample is marked as cancelled (UDF: "cancelled", value: "yes") it will
 
 [travis-url]: https://travis-ci.org/Clinical-Genomics/cglims
 [travis-image]: https://img.shields.io/travis/Clinical-Genomics/cglims.svg?style=flat-square
-
-[coveralls-url]: https://coveralls.io/r/Clinical-Genomics/cglims
-[coveralls-image]: https://img.shields.io/coveralls/Clinical-Genomics/cglims.svg?style=flat-square
