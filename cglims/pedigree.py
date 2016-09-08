@@ -85,7 +85,16 @@ def convert_sample(api, lims_sample):
     affection_status = lims_sample.udf['Status']
     sex_letter = lims_sample.udf['Gender']
     try:
-        gene_panel = lims_sample.udf['Gene List']
+        gene_panels = lims_sample.udf['Gene List']
+        if ':' in gene_panels:
+            log.warn("wrong separator in 'Gene List': %s", gene_panels)
+            udf_key = 'Gene List'
+            new_value = gene_panels.replace(':', ';')
+            lims_sample.udf[udf_key] = new_value
+            log.info("updating %s: '%s' -> '%s'", lims_sample.id,
+                     gene_panels, new_value)
+            lims_sample.put()
+            gene_panels = new_value
     except KeyError:
         message = "{}: 'Gene List'".format(lims_sample.id)
         raise MissingLimsDataException(message)
@@ -101,7 +110,7 @@ def convert_sample(api, lims_sample):
         'Maternal ID': lims_sample.udf.get('motherID', '0'),
         'Sex': SEX_MAP[sex_letter],
         'Phenotype': ped_phenotype,
-        'Clinical_db': gene_panel,
+        'Clinical_db': gene_panels,
         'Sequencing_type': sequencing_type(app_tag),
         'internal_id': get_sampleid(lims_sample),
     }
