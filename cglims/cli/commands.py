@@ -21,10 +21,10 @@ def pedigree(context, customer, family):
 
 @click.command()
 @click.option('-p', '--pretty', is_flag=True, help='pretty print JSON')
-@click.option('-f', '--field', help='print specific field only')
+@click.option('-f', '--fields', nargs=-1, help='print specific fields only')
 @click.argument('identifier')
 @click.pass_context
-def get(context, pretty, field, identifier):
+def get(context, pretty, fields, identifier):
     """Get information from LIMS: either sample or family samples."""
     api = connect_api(context.obj)
     if identifier.startswith('cust'):
@@ -36,15 +36,17 @@ def get(context, pretty, field, identifier):
         samples = [api.sample(identifier, is_cgid=is_cgid)]
 
     for sample in samples:
-        fields = deepcopy(sample.udf._lookup)
-        fields['id'] = sample.id
-        fields['name'] = sample.name
+        values = deepcopy(sample.udf._lookup)
+        values['id'] = sample.id
+        values['name'] = sample.name
         date_parts = map(int, sample.date_received.split('-'))
-        fields['date_received'] = datetime(*date_parts)
-        fields['project_name'] = sample.project.name
+        values['date_received'] = datetime(*date_parts)
+        values['project_name'] = sample.project.name
 
-        if field:
-            click.echo("{}: {}".format(sample.id, fields.get(field, 'N/A')))
+        if fields:
+            output = ' '.join(values[field] for field in fields
+                              if field in values)
+            click.echo(output, nl=False)
         else:
             click.echo(jsonify(fields, pretty=pretty))
 
