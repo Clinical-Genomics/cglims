@@ -21,10 +21,10 @@ def pedigree(context, customer, family):
 
 @click.command()
 @click.option('-p', '--pretty', is_flag=True, help='pretty print JSON')
-@click.option('-f', '--fields', nargs=-1, help='print specific fields only')
 @click.argument('identifier')
+@click.argument('fields', nargs=-1, required=False)
 @click.pass_context
-def get(context, pretty, fields, identifier):
+def get(context, pretty, identifier, fields):
     """Get information from LIMS: either sample or family samples."""
     api = connect_api(context.obj)
     if identifier.startswith('cust'):
@@ -48,7 +48,7 @@ def get(context, pretty, fields, identifier):
                               if field in values)
             click.echo(output, nl=False)
         else:
-            click.echo(jsonify(fields, pretty=pretty))
+            click.echo(jsonify(values, pretty=pretty))
 
 
 @click.command()
