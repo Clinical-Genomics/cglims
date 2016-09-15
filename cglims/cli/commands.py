@@ -7,6 +7,8 @@ import click
 from cglims.pedigree import make_pedigree
 from .utils import connect_api, jsonify
 
+SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
+
 
 @click.command()
 @click.argument('customer')
@@ -42,6 +44,7 @@ def get(context, pretty, identifier, fields):
         date_parts = map(int, sample.date_received.split('-'))
         values['date_received'] = datetime(*date_parts)
         values['project_name'] = sample.project.name
+        values['sex'] = SEX_MAP.get(values['Gender'])
 
         if fields:
             output = ' '.join(values[field] for field in fields
