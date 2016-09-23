@@ -46,8 +46,8 @@ def get(context, pretty, identifier, fields):
         values['project_name'] = sample.project.name
         values['sex'] = SEX_MAP.get(values['Gender'])
         if 'customer' in values and 'familyID' in values:
-            values['case_id'] = "{}-{}".format(values['customer',
-                                               values['familyID']])
+            values['case_id'] = "{}-{}".format(values['customer'],
+                                               values['familyID'])
 
         if fields:
             output = ' '.join(values[field] for field in fields
