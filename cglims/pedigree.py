@@ -7,7 +7,7 @@ import csv
 from .exc import MissingLimsDataException
 
 PHENOTYPE_MAP = dict(Affected='2', Unaffected='1', unknown='0')
-SEX_MAP = dict(M='1', F='2')
+SEX_MAP = dict(M='1', F='2', Unknown='other', unknown='other')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
                   'Agilent Sureselect V5': 'Agilent_SureSelect.V5'}
 MANDATORY_HEADERS = ['Family ID', 'Individual ID', 'Paternal ID',
