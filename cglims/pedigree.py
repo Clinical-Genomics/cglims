@@ -65,12 +65,13 @@ def capture_kit(lims, lims_sample, udf_key='Capture Library version',
     return CAPTUREKIT_MAP[capture_kit.strip()]
 
 
-def make_pedigree(api, customer, family_id, internalize=True):
+def make_pedigree(api, customer, family_id, gene_panel=None, internalize=True):
     """String together all individual steps to create a pedigree."""
     # find sample in lims
     lims_samples = api.case(customer, family_id)
     # extract information about samples
-    samples = [convert_sample(api, lims_sample) for lims_sample in lims_samples
+    samples = [convert_sample(api, lims_sample, gene_panel=gene_panel)
+               for lims_sample in lims_samples
                if lims_sample.udf.get('cancelled') != 'yes']
     if internalize:
         samples = internalize_ids(samples)
@@ -79,25 +80,28 @@ def make_pedigree(api, customer, family_id, internalize=True):
     return "#{}".format(rows)
 
 
-def convert_sample(api, lims_sample):
+def convert_sample(api, lims_sample, gene_panel=None):
     """Extract information from LIMS samples that relate to pedigree."""
     app_tag = lims_sample.udf['Sequencing Analysis']
     affection_status = lims_sample.udf['Status']
     sex_letter = lims_sample.udf['Gender']
-    try:
-        gene_panels = lims_sample.udf['Gene List']
-        if ':' in gene_panels:
-            log.warn("wrong separator in 'Gene List': %s", gene_panels)
-            udf_key = 'Gene List'
-            new_value = gene_panels.replace(':', ';')
-            lims_sample.udf[udf_key] = new_value
-            log.info("updating %s: '%s' -> '%s'", lims_sample.id,
-                     gene_panels, new_value)
-            lims_sample.put()
-            gene_panels = new_value
-    except KeyError:
-        message = "{}: 'Gene List'".format(lims_sample.id)
-        raise MissingLimsDataException(message)
+    if gene_panel:
+        gene_panels = gene_panel
+    else:
+        try:
+            gene_panels = lims_sample.udf['Gene List']
+            if ':' in gene_panels:
+                log.warn("wrong separator in 'Gene List': %s", gene_panels)
+                udf_key = 'Gene List'
+                new_value = gene_panels.replace(':', ';')
+                lims_sample.udf[udf_key] = new_value
+                log.info("updating %s: '%s' -> '%s'", lims_sample.id,
+                         gene_panels, new_value)
+                lims_sample.put()
+                gene_panels = new_value
+        except KeyError:
+            message = "{}: 'Gene List'".format(lims_sample.id)
+            raise MissingLimsDataException(message)
     try:
         ped_phenotype = PHENOTYPE_MAP[affection_status]
     except KeyError:
