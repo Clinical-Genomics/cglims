@@ -45,7 +45,7 @@ def get(context, pretty, identifier, fields):
         date_parts = map(int, sample.date_received.split('-'))
         values['date_received'] = datetime(*date_parts)
         values['project_name'] = sample.project.name
-        values['sex'] = SEX_MAP.get(values['Gender'])
+        values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
         if 'customer' in values and 'familyID' in values:
             values['case_id'] = "{}-{}".format(values['customer'],
                                                values['familyID'])
@@ -53,7 +53,7 @@ def get(context, pretty, identifier, fields):
         if fields:
             output = ' '.join(values[field] for field in fields
                               if field in values)
-            click.echo(output, nl=False)
+            click.echo(output)
         else:
             click.echo(jsonify(values, pretty=pretty))
 
