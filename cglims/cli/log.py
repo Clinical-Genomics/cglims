@@ -20,6 +20,9 @@ def init_log(logger, filename=None, loglevel=None):
     console.setLevel('WARNING')
     console.setFormatter(formatter)
 
+    # be more strict about logging from requests package ;)
+    logging.getLogger('requests').setLevel(logging.WARNING)
+
     if filename:
         file_handler = logging.FileHandler(filename, encoding='utf-8')
         if loglevel:
