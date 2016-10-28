@@ -25,12 +25,25 @@ def gather_data(lims_sample):
         'sex': SEX_MAP[sex_letter],
         'phenotype': lims_sample.udf['Status'].lower(),
         'analysis_type': sequencing_type(app_tag),
+        'expected_coverage': expected_coverage(app_tag),
     }
     for parent_field in ('fatherID', 'motherID'):
         parent_id = lims_sample.udf.get(parent_field)
         if parent_id and parent_id != '0':
             data[parent_field.replace('ID', '')] = parent_id
     return family_id, data
+
+
+def expected_coverage(app_tag):
+    """Parse out the expected coverage from the app tag."""
+    read_part = app_tag[-4:]
+    if read_part.startswith('C'):
+        return int(read_part[1:])
+    elif read_part.startswith('R'):
+        # target reads expressed in millions
+        return int(read_part[1:]) * 1.5
+    else:
+        raise ValueError("unexpected app tag: %s", app_tag)
 
 
 def make_config(lims_api, customer, family_id, gene_panels=None,
