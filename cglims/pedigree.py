@@ -5,11 +5,8 @@ from .exc import MissingLimsDataException
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
-                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5', 'other' : 'Agilent_SureSelectCRE.V1'}
-MANDATORY_HEADERS = ['Family ID', 'Individual ID', 'Paternal ID',
-                     'Maternal ID', 'Sex', 'Phenotype']
-EXTRA_HEADERS = ['Clinical_db', 'Capture_kit', 'display_name',
-                 'Sequencing_type']
+                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
+                  'other': 'Agilent_SureSelectCRE.V1'}
 
 log = logging.getLogger(__name__)
 
