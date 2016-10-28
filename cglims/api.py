@@ -34,3 +34,41 @@ class ClinicalLims(Lims):
 def parse_udfs(udfs):
     """Parse raw UDF values for a sample."""
     pass
+
+
+def deliver(lims_sample):
+    """Figure out how to deliver results for a sample.
+
+    Answers:
+        - whether to delivery to Scout
+        - where to deliver raw data
+        - wether we shoud delivery extra assets
+    """
+    extras = []
+    # should the sample be uploaded in Scout?
+    to_scout = 'scout' in lims_sample.udf.get('Data Analysis', 'notFound')
+    # we should always deliver at least FASTQ files somewhere, but where?
+    # the default is to deliver to Caesar
+    payload = {'target': 'caesar'}
+    customer = lims_sample.udf['customer']
+
+    uppmax_project = lims_sample.udf.get('uppmax_project')
+    if uppmax_project:
+        payload = {'target': 'uppmax', 'project': uppmax_project}
+
+    if customer == 'cust002':
+        extras.append('bam')
+    elif customer == 'cust009':
+        # molecular health... "there's a script for that"
+        payload = {}
+    elif customer in ('cust008', 'cust016', 'cust019', 'cust020'):
+        payload = {'target': 'sll-sthlm@medstore.sahlgrenska.gu.se'}
+    elif customer == 'cust000':
+        payload = {'target': 'rasta'}
+
+    return {
+        'scout': to_scout,
+        'customer': customer,
+        'raw_data': payload,
+        'extras': extras
+    }
