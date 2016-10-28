@@ -3,10 +3,11 @@ from datetime import datetime
 from copy import deepcopy
 
 import click
+import yaml
 
-from cglims.pedigree import make_pedigree
 from cglims import api
 from .utils import jsonify
+from cglims.pedigree import make_config
 
 SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 
@@ -16,11 +17,14 @@ SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 @click.argument('customer')
 @click.argument('family')
 @click.pass_context
-def pedigree(context, gene_panel, customer, family):
+def config(context, gene_panel, customer, family):
     """Create pedigree from LIMS."""
-    lims = api.connect(context.obj)
-    content = make_pedigree(lims, customer, family, gene_panel=gene_panel)
-    click.echo(content, nl=False)
+    lims_api = api.connect(context.obj)
+    gene_panels = [gene_panel] if gene_panel else None
+    family = family.encode('utf-8')
+    data = make_config(lims_api, customer, family, gene_panels=gene_panels)
+    dump = yaml.dump(data, default_flow_style=False, allow_unicode=True)
+    click.echo(dump)
 
 
 @click.command()

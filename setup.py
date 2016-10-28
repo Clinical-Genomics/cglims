@@ -70,7 +70,7 @@ setup(
     entry_points={
         'console_scripts': ['cglims = cglims.cli:root'],
         'cglims.subcommands.1': [
-            'pedigree = cglims.cli.commands:pedigree',
+            'config = cglims.cli.commands:config',
             'get = cglims.cli.commands:get',
             'update = cglims.cli.commands:update',
             'export = cglims.export:export',
