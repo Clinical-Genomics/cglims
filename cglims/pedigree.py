@@ -6,7 +6,7 @@ import csv
 
 from .exc import MissingLimsDataException
 
-PHENOTYPE_MAP = dict(Affected='2', Unaffected='1', unknown='0')
+PHENOTYPE_MAP = dict(affected='2', unaffected='1', unknown='0')
 SEX_MAP = dict(M='1', F='2', Unknown='other', unknown='other')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
                   'Agilent Sureselect V5': 'Agilent_SureSelect.V5'}
@@ -83,7 +83,7 @@ def make_pedigree(api, customer, family_id, gene_panel=None, internalize=True):
 def convert_sample(api, lims_sample, gene_panel=None):
     """Extract information from LIMS samples that relate to pedigree."""
     app_tag = lims_sample.udf['Sequencing Analysis']
-    affection_status = lims_sample.udf['Status']
+    affection_status = lims_sample.udf['Status'].lower()
     sex_letter = lims_sample.udf['Gender']
     if gene_panel:
         gene_panels = gene_panel
