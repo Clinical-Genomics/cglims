@@ -22,19 +22,19 @@ def jsonify(data, pretty=False):
 def fix_dump(dump, indentSize=2):
     stream = StringIO(dump)
     out = StringIO()
-    pat = re.compile('(\s*)([^:]*)(:*)')
+    pattern = re.compile('(\s*)([^:]*)(:*)')
     last = None
 
     prefix = 0
-    for s in stream:
-        indent, key, colon = pat.match(s).groups()
+    for line in stream:
+        indent, key, colon = pattern.match(line).groups()
         if indent == "" and key[0] != '-':
             prefix = 0
         if last:
             if len(last[0]) == len(indent) and last[2] == ':':
                 if all([not last[1].startswith('-'),
-                        s.strip().startswith('-')]):
+                        line.strip().startswith('-')]):
                     prefix += indentSize
-        out.write(" " * prefix + s)
+        out.write(" " * prefix + line)
         last = indent, key, colon
     return out.getvalue()
