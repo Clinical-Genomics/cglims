@@ -28,11 +28,11 @@ def config(context, gene_panel, customer, family):
 
 
 @click.command()
-@click.option('-p', '--pretty', is_flag=True, help='pretty print JSON')
+@click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.argument('identifier')
 @click.argument('fields', nargs=-1, required=False)
 @click.pass_context
-def get(context, pretty, identifier, fields):
+def get(context, condense, identifier, fields):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
     if identifier.startswith('cust'):
@@ -60,7 +60,15 @@ def get(context, pretty, identifier, fields):
                               if field in values)
             click.echo(output)
         else:
-            click.echo(jsonify(values, pretty=pretty))
+            if condense:
+                dump = jsonify(values)
+            else:
+                raw_dump = yaml.safe_dump(values, default_flow_style=False,
+                                          allow_unicode=True)
+                dump = fix_dump(raw_dump)
+                click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
+                click.echo(click.style(sample.id, bold=True, fg='red'))
+            click.echo(dump)
 
 
 @click.command()
