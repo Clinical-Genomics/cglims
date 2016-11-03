@@ -68,7 +68,7 @@ def get(context, condense, identifier, fields):
                 dump = fix_dump(raw_dump)
                 click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
                 click.echo(click.style(sample.id, bold=True, fg='red'))
-                if sample.udf.get('cancelled') != 'yes':
+                if sample.udf.get('cancelled') == 'yes':
                     click.echo(click.style('CANCELLED', bold=True, fg='yellow'))
             click.echo(dump)
 
