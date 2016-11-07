@@ -67,7 +67,7 @@ def update(context, lims_id, field_key, new_value):
     """Update a UDF for a sample."""
     api = connect_api(context.obj)
     lims_sample = api.sample(lims_id)
-    old_value = lims_sample.udf.get(field_key, 'N/A')
+    old_value = lims_sample.udf.get(field_key, 'N/A').encode('utf-8')
     click.echo("about to update sample: {}".format(lims_sample.id))
     message_tmlt = "are you sure you want to change '{}': '{}' -> '{}'"
     if click.confirm(message_tmlt.format(field_key, old_value, new_value)):
