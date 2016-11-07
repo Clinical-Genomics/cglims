@@ -71,8 +71,9 @@ def make_config(lims_api, customer, family_id, gene_panels=None,
         samples_data = internalize_ids(samples_data)
 
     case_data = {
-        'family_id': family_id,
-        'gene_panels': gene_panels or list(all_panels),
+        'customer': customer,
+        'family': family_id,
+        'default_gene_panels': gene_panels or list(all_panels),
         'samples': list(samples_data),
     }
     return case_data

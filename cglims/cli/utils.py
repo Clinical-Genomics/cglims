@@ -4,6 +4,8 @@ import json
 import re
 from cStringIO import StringIO
 
+from cglims.constants import READS_PERX
+
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -38,3 +40,18 @@ def fix_dump(dump, indentSize=2):
         out.write(" " * prefix + line)
         last = indent, key, colon
     return out.getvalue()
+
+
+def ordered_reads(app_tag):
+    """Calculate ordered number of reads."""
+    type_id = app_tag[-4]
+    number = int(app_tag[-3:])
+    if type_id == 'R':
+        return number * 1000000
+    elif type_id == 'K':
+        return number * 1000
+    elif type_id == 'C':
+        # expect WGS
+        return number * READS_PERX
+    else:
+        raise ValueError("unknown read type id: {}".format(type_id))

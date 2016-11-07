@@ -6,7 +6,7 @@ import click
 import yaml
 
 from cglims import api
-from .utils import jsonify, fix_dump
+from .utils import jsonify, fix_dump, ordered_reads
 from cglims.pedigree import make_config
 
 SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
@@ -14,16 +14,19 @@ SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 
 @click.command()
 @click.option('-g', '--gene-panel', help='custom gene panel')
-@click.argument('customer')
-@click.argument('family')
+@click.argument('customer_or_case', help="customer or full case_id")
+@click.argument('family', required=False)
 @click.pass_context
-def config(context, gene_panel, customer, family):
+def config(context, gene_panel, customer_or_case, family):
     """Create pedigree from LIMS."""
     lims_api = api.connect(context.obj)
     gene_panels = [gene_panel] if gene_panel else None
-    family = family.encode('utf-8')
+    if family is None:
+        customer, family = customer_or_case.split('-')
+    else:
+        customer = customer_or_case
     data = make_config(lims_api, customer, family, gene_panels=gene_panels)
-    dump = yaml.dump(data, default_flow_style=False, allow_unicode=True)
+    dump = yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
     click.echo(fix_dump(dump))
 
 
@@ -51,6 +54,8 @@ def get(context, condense, identifier, fields):
         values['date_received'] = datetime(*date_parts)
         values['project_name'] = sample.project.name
         values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
+        values['reads'] = ordered_reads(values['Sequencing Analysis'])
+        values['expected_reads'] = int(values['reads'] * .75)
         if 'customer' in values and 'familyID' in values:
             values['case_id'] = "{}-{}".format(values['customer'],
                                                values['familyID'])
