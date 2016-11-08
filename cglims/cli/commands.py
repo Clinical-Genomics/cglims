@@ -51,7 +51,7 @@ def get(context, pretty, identifier, fields):
                                                values['familyID'])
 
         if fields:
-            output = ' '.join(values[field] for field in fields
+            output = ' '.join(str(values[field]) for field in fields
                               if field in values)
             click.echo(output)
         else:
