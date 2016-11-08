@@ -4,7 +4,7 @@ import json
 import re
 from cStringIO import StringIO
 
-from cglims.constants import READS_PERX
+from cglims.constants import READS_PER_1X
 
 
 def json_serial(obj):
@@ -52,6 +52,6 @@ def ordered_reads(app_tag):
         return number * 1000
     elif type_id == 'C':
         # expect WGS
-        return number * READS_PERX
+        return number * READS_PER_1X
     else:
         raise ValueError("unknown read type id: {}".format(type_id))

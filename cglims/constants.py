@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
 
 # for WGS, how many reads needed to cover genome 1x
-READS_PERX = (435 * 1000000) / 30
+NO_BASES = 3100000000
+BASES_PER_READ = 150
+READS_PER_1X = NO_BASES / BASES_PER_READ

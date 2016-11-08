@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from cglims.constants import READS_PERX
+from cglims.constants import READS_PER_1X
 
 PANELS = ('EXO', 'EXT', 'MHP', 'EFT', 'CCP')
 HISEQX = ('WGS', 'WGT', 'WGL', 'MWX')
@@ -51,6 +51,6 @@ class ApplicationTag(str):
         elif type_id == 'C':
             if self.is_panel:
                 raise ValueError("can't convert coverage for panels")
-            return number * READS_PERX
+            return number * READS_PER_1X
         else:
             raise ValueError("unknown read type id: {}".format(type_id))

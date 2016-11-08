@@ -6,15 +6,16 @@ import click
 import yaml
 
 from cglims import api
-from .utils import jsonify, fix_dump, ordered_reads
+from cglims.apptag import ApplicationTag
 from cglims.pedigree import make_config
+from .utils import jsonify, fix_dump, ordered_reads
 
 SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 
 
 @click.command()
 @click.option('-g', '--gene-panel', help='custom gene panel')
-@click.argument('customer_or_case', help="customer or full case_id")
+@click.argument('customer_or_case')
 @click.argument('family', required=False)
 @click.pass_context
 def config(context, gene_panel, customer_or_case, family):
@@ -56,6 +57,10 @@ def get(context, condense, identifier, fields):
         values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
         values['reads'] = ordered_reads(values['Sequencing Analysis'])
         values['expected_reads'] = int(values['reads'] * .75)
+
+        apptag = ApplicationTag(values['Sequencing Analysis'])
+        values['is_human'] = apptag.is_human
+
         if 'customer' in values and 'familyID' in values:
             values['case_id'] = "{}-{}".format(values['customer'],
                                                values['familyID'])
