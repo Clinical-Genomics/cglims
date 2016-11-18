@@ -5,7 +5,8 @@ from copy import deepcopy
 import click
 
 from cglims.pedigree import make_pedigree
-from .utils import connect_api, jsonify
+from cglims import api
+from .utils import jsonify
 
 SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 
@@ -17,8 +18,8 @@ SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 @click.pass_context
 def pedigree(context, gene_panel, customer, family):
     """Create pedigree from LIMS."""
-    api = connect_api(context.obj)
-    content = make_pedigree(api, customer, family, gene_panel=gene_panel)
+    lims = api.connect(context.obj)
+    content = make_pedigree(lims, customer, family, gene_panel=gene_panel)
     click.echo(content, nl=False)
 
 
@@ -29,14 +30,14 @@ def pedigree(context, gene_panel, customer, family):
 @click.pass_context
 def get(context, pretty, identifier, fields):
     """Get information from LIMS: either sample or family samples."""
-    api = connect_api(context.obj)
+    lims = api.connect(context.obj)
     if identifier.startswith('cust'):
         # look up samples in a case
-        samples = api.case(*identifier.split('-', 1))
+        samples = lims.case(*identifier.split('-', 1))
     else:
         # look up a single sample
         is_cgid = True if identifier[0].isdigit() else False
-        samples = [api.sample(identifier, is_cgid=is_cgid)]
+        samples = [lims.sample(identifier, is_cgid=is_cgid)]
 
     for sample in samples:
         values = deepcopy(sample.udf._lookup)
@@ -65,8 +66,8 @@ def get(context, pretty, identifier, fields):
 @click.pass_context
 def update(context, lims_id, field_key, new_value):
     """Update a UDF for a sample."""
-    api = connect_api(context.obj)
-    lims_sample = api.sample(lims_id)
+    lims = api.connect(context.obj)
+    lims_sample = lims.sample(lims_id)
     old_value = lims_sample.udf.get(field_key, 'N/A').encode('utf-8')
     click.echo("about to update sample: {}".format(lims_sample.id))
     message_tmlt = "are you sure you want to change '{}': '{}' -> '{}'"

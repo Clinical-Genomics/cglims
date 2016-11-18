@@ -2,14 +2,6 @@
 import datetime
 import json
 
-from cglims.api import ClinicalLims
-
-
-def connect_api(config):
-    """Connect and return API reference."""
-    api = ClinicalLims(config['host'], config['username'], config['password'])
-    return api
-
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""

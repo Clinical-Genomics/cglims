@@ -73,6 +73,7 @@ setup(
             'pedigree = cglims.cli.commands:pedigree',
             'get = cglims.cli.commands:get',
             'update = cglims.cli.commands:update',
+            'export = cglims.export:export',
         ],
     },
 )

@@ -5,6 +5,12 @@ from genologics.lims import Lims
 from cglims.exc import MultipleSamplesError
 
 
+def connect(config):
+    """Connect and return API reference."""
+    api = ClinicalLims(config['host'], config['username'], config['password'])
+    return api
+
+
 class ClinicalLims(Lims):
 
     def case(self, customer, family_id):
