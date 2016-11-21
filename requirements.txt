@@ -2,3 +2,4 @@ click
 genologics>=0.3.7.post0
 PyYAML
 six
+python-dateutil
