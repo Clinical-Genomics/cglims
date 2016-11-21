@@ -12,12 +12,16 @@ log = logging.getLogger(__name__)
 
 
 @click.command()
-@click.argument('customer')
-@click.argument('family_id')
+@click.argument('customer_or_case')
+@click.argument('family_id', required=False)
 @click.pass_context
-def export(context, customer, family_id):
+def export(context, customer_or_case, family_id):
     """Parse out interesting data about a case."""
     lims = api.connect(context.obj)
+    if family_id:
+        customer = customer_or_case
+    else:
+        customer, family_id = customer_or_case.split('-', 1)
     lims_samples = lims.case(customer, family_id)
     case_data = export_case(lims_samples)
 
