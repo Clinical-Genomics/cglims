@@ -33,13 +33,16 @@ def config(context, gene_panel, customer_or_case, family):
 
 @click.command()
 @click.option('-c', '--condense', is_flag=True, help='condense output')
+@click.option('-p', '--project', is_flag=True, help='identifier is a project')
 @click.argument('identifier')
 @click.argument('fields', nargs=-1, required=False)
 @click.pass_context
-def get(context, condense, identifier, fields):
+def get(context, condense, project, identifier, fields):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
-    if identifier.startswith('cust'):
+    if project:
+        samples = api.get_samples(projectname=identifier)
+    elif identifier.startswith('cust'):
         # look up samples in a case
         samples = lims.case(*identifier.split('-', 1))
     else:
