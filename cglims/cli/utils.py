@@ -2,7 +2,8 @@
 import datetime
 import json
 import re
-from cStringIO import StringIO
+
+from six import StringIO
 
 from cglims.constants import READS_PER_1X
 
