@@ -8,9 +8,8 @@ import yaml
 from cglims import api
 from cglims.apptag import ApplicationTag
 from cglims.pedigree import make_config
+from cglims.constants import SEX_MAP
 from .utils import jsonify, fix_dump, ordered_reads
-
-SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 
 
 @click.command()

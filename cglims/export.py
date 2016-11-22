@@ -7,6 +7,7 @@ from dateutil.parser import parse as parse_date
 import yaml
 
 from cglims import api
+from cglims.constants import SEX_MAP
 
 log = logging.getLogger(__name__)
 
@@ -61,9 +62,9 @@ def sample_data(lims_sample):
             'id': lims_sample.id,
             'name': lims_sample.name,
             'received_at': parse_date(lims_sample.date_received),
-            'status': lims_sample.udf['Status'],
+            'status': lims_sample.udf['Status'].lower(),
             'delivery': lims_sample.udf['Data Analysis'],
-            'sex': lims_sample.udf['Gender'],
+            'sex': SEX_MAP.get(lims_sample.udf.get('Gender'), 'N/A'),
             'app_tag': lims_sample.udf['Sequencing Analysis'],
             'priority': lims_sample.udf.get('priority', 'standard'),
             'capture_kit': capture_kit if capture_kit != 'NA' else None,
