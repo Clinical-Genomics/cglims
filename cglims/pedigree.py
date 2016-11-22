@@ -65,16 +65,21 @@ def capture_kit(lims, lims_sample, udf_key='Capture Library version',
     return CAPTUREKIT_MAP[capture_kit.strip()]
 
 
-def make_pedigree(api, customer, family_id, gene_panel=None, internalize=True):
+def make_pedigree(api, lims_samples, family_id=None, gene_panel=None,
+                  internalize=True):
     """String together all individual steps to create a pedigree."""
-    # find sample in lims
-    lims_samples = api.case(customer, family_id)
     # extract information about samples
     samples = [convert_sample(api, lims_sample, gene_panel=gene_panel)
                for lims_sample in lims_samples
                if lims_sample.udf.get('cancelled') != 'yes']
     if internalize:
         samples = internalize_ids(samples)
+    if family_id:
+        raw_samples = samples
+        samples = []
+        for sample in raw_samples:
+            sample['Family ID'] = family_id
+            samples.append(sample)
     # serialize to CSV PED file
     rows = serialize(samples)
     return "#{}".format(rows)

@@ -13,14 +13,25 @@ SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
 
 @click.command()
 @click.option('-g', '--gene-panel', help='custom gene panel')
+@click.option('-s', '--samples', multiple=True, help='included samples')
 @click.argument('customer')
-@click.argument('family')
+@click.argument('family', required=False)
 @click.pass_context
-def pedigree(context, gene_panel, customer, family):
+def pedigree(context, gene_panel, samples, customer, family):
     """Create pedigree from LIMS."""
     lims = api.connect(context.obj)
-    content = make_pedigree(lims, customer, family, gene_panel=gene_panel)
-    click.echo(content, nl=False)
+    if customer and family:
+        lims_samples = lims.case(customer, family)
+        family_id = None
+    elif samples:
+        lims_samples = [lims.sample(sample_id) for sample_id in samples]
+        family_id = customer
+    else:
+        click.echo("you need to provide customer+family or samples")
+        context.abort()
+    content = make_pedigree(lims, lims_samples, family_id=family_id,
+                            gene_panel=gene_panel)
+    click.echo(content)
 
 
 @click.command()
