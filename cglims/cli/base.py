@@ -40,8 +40,8 @@ def build_cli(title):
     version = pkg_resources.get_distribution(title).version
 
     @click.group(cls=EntryPointsCLI)
-    @click.option('-c', '--config', default="~/.{}.yaml".format(title),
-                  type=click.Path(), help='path to config file')
+    @click.option('-c', '--config', type=click.Path(exists=True),
+                  help='path to config file')
     @click.option('-d', '--database', help='path/URI of the SQL database')
     @click.option('-l', '--log-level', default='INFO')
     @click.option('--log-file', type=click.Path())
@@ -53,6 +53,8 @@ def build_cli(title):
         log.debug("{}: version {}".format(title, version))
 
         # read in config file if it exists
+        config = (config or os.environ.get('CGLIMS_CONFIG') or
+                  "~/.{}.yaml".format(title))
         if os.path.exists(config):
             with codecs.open(config) as conf_handle:
                 context.obj = yaml.load(conf_handle)
