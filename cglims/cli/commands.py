@@ -3,12 +3,14 @@ from datetime import datetime
 from copy import deepcopy
 
 import click
+import yaml
 
-from cglims.pedigree import make_pedigree
 from cglims import api
-from .utils import jsonify
-
-SEX_MAP = {'F': 'female', 'M': 'male', 'Unknown': 'unknown'}
+from cglims.apptag import ApplicationTag
+from cglims.config import make_config
+from cglims.pedigree import make_pedigree
+from cglims.constants import SEX_MAP
+from .utils import jsonify, fix_dump, ordered_reads
 
 
 @click.command()
@@ -33,14 +35,35 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
 
 
 @click.command()
-@click.option('-p', '--pretty', is_flag=True, help='pretty print JSON')
+@click.option('-g', '--gene-panel', help='custom gene panel')
+@click.argument('customer_or_case')
+@click.argument('family', required=False)
+@click.pass_context
+def config(context, gene_panel, customer_or_case, family):
+    """Create pedigree from LIMS."""
+    lims_api = api.connect(context.obj)
+    gene_panels = [gene_panel] if gene_panel else None
+    if family is None:
+        customer, family = customer_or_case.split('-', 1)
+    else:
+        customer = customer_or_case
+    data = make_config(lims_api, customer, family, gene_panels=gene_panels)
+    dump = yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
+    click.echo(fix_dump(dump))
+
+
+@click.command()
+@click.option('-c', '--condense', is_flag=True, help='condense output')
+@click.option('-p', '--project', is_flag=True, help='identifier is a project')
 @click.argument('identifier')
 @click.argument('fields', nargs=-1, required=False)
 @click.pass_context
-def get(context, pretty, identifier, fields):
+def get(context, condense, project, identifier, fields):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
-    if identifier.startswith('cust'):
+    if project:
+        samples = api.get_samples(projectname=identifier)
+    elif identifier.startswith('cust'):
         # look up samples in a case
         samples = lims.case(*identifier.split('-', 1))
     else:
@@ -56,6 +79,12 @@ def get(context, pretty, identifier, fields):
         values['date_received'] = datetime(*date_parts)
         values['project_name'] = sample.project.name
         values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
+        values['reads'] = ordered_reads(values['Sequencing Analysis'])
+        values['expected_reads'] = int(values['reads'] * .75)
+
+        apptag = ApplicationTag(values['Sequencing Analysis'])
+        values['is_human'] = apptag.is_human
+
         if 'customer' in values and 'familyID' in values:
             values['case_id'] = "{}-{}".format(values['customer'],
                                                values['familyID'])
@@ -65,7 +94,17 @@ def get(context, pretty, identifier, fields):
                               if field in values)
             click.echo(output)
         else:
-            click.echo(jsonify(values, pretty=pretty))
+            if condense:
+                dump = jsonify(values)
+            else:
+                raw_dump = yaml.safe_dump(values, default_flow_style=False,
+                                          allow_unicode=True)
+                dump = fix_dump(raw_dump)
+                click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
+                click.echo(click.style(sample.id, bold=True, fg='red'))
+                if sample.udf.get('cancelled') == 'yes':
+                    click.echo(click.style('CANCELLED', bold=True, fg='yellow'))
+            click.echo(dump)
 
 
 @click.command()

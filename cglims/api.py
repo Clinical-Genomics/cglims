@@ -37,11 +37,6 @@ class ClinicalLims(Lims):
         return lims_sample
 
 
-def parse_udfs(udfs):
-    """Parse raw UDF values for a sample."""
-    pass
-
-
 def deliver(lims_sample):
     """Figure out how to deliver results for a sample.
 
