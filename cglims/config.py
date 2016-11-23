@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 def gather_data(lims_sample):
     """Gather analysis/pedigree data about a sample."""
+    customer = lims_sample.udf['customer']
     family_id = lims_sample.udf['familyID']
     app_tag = lims_sample.udf['Sequencing Analysis']
     sex_letter = lims_sample.udf['Gender']
@@ -28,7 +29,7 @@ def gather_data(lims_sample):
         parent_id = lims_sample.udf.get(parent_field)
         if parent_id and parent_id != '0':
             data[parent_field.replace('ID', '')] = parent_id
-    return family_id, data
+    return customer, family_id, data
 
 
 def expected_coverage(app_tag):
@@ -43,19 +44,21 @@ def expected_coverage(app_tag):
         raise ValueError("unexpected app tag: %s", app_tag)
 
 
-def make_config(lims_api, customer, family_id, gene_panels=None,
-                internalize=True):
+def make_config(lims_api, lims_samples, customer=None, family_id=None,
+                gene_panels=None, internalize=True):
     """Make the config for all samples."""
-    lims_samples = lims_api.case(customer, family_id)
     active_samples = (lims_sample for lims_sample in lims_samples
                       if lims_sample.udf.get('cancelled') != 'yes')
 
     # filter out cancelled samples
     samples_data = []
+    customers = set()
+    families = set()
     all_panels = set()
     for lims_sample in active_samples:
-        sample_family_id, data = gather_data(lims_sample)
-        assert sample_family_id == family_id, "non-matching family ids"
+        sample_customer, sample_family, data = gather_data(lims_sample)
+        customers.add(sample_customer)
+        families.add(sample_family)
 
         # fetch capture kit if sample is exome sequenced
         if data['analysis_type'] == 'wes':
@@ -69,6 +72,13 @@ def make_config(lims_api, customer, family_id, gene_panels=None,
 
     if internalize:
         samples_data = internalize_ids(samples_data)
+
+    if customer is None:
+        assert len(customers) == 1, "conflicting custs: {}".format(customers)
+        customer = customers.pop()
+    if family_id is None:
+        assert len(families) == 1, "conflicting families: {}".format(families)
+        family_id = families.pop()
 
     case_data = {
         'customer': customer,

@@ -36,18 +36,25 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
 
 @click.command()
 @click.option('-g', '--gene-panel', help='custom gene panel')
+@click.option('-f', '--family-id', help='custom family id')
+@click.option('-s', '--samples', multiple=True, help='included samples')
 @click.argument('customer_or_case')
 @click.argument('family', required=False)
 @click.pass_context
-def config(context, gene_panel, customer_or_case, family):
+def config(context, gene_panel, family_id, samples, customer_or_case, family):
     """Create pedigree from LIMS."""
     lims_api = api.connect(context.obj)
     gene_panels = [gene_panel] if gene_panel else None
-    if family is None:
-        customer, family = customer_or_case.split('-', 1)
-    else:
-        customer = customer_or_case
-    data = make_config(lims_api, customer, family, gene_panels=gene_panels)
+    if customer_or_case:
+        if family is None:
+            customer, family = customer_or_case.split('-', 1)
+        else:
+            customer = customer_or_case
+        lims_samples = lims_api.case(customer, family)
+    elif samples:
+        lims_samples = [lims_api.sample(sample_id) for sample_id in samples]
+    data = make_config(lims_api, lims_samples, family_id=family_id,
+                       gene_panels=gene_panels)
     dump = yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
     click.echo(fix_dump(dump))
 
