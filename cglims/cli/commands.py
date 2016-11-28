@@ -137,7 +137,7 @@ def update(context, lims_id, field_key, new_value):
 def fillin(context, sample_id):
     """Fill in defaults for a LIMS sample."""
     lims_api = api.connect(context.obj)
-    lims_sample = lims.samples(sample_id)
+    lims_sample = lims_api.samples(sample_id)
     click.echo("filling in defaults...")
     set_defaults(lims_sample)
     lims_sample.put()
