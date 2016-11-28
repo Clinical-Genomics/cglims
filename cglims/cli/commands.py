@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from copy import deepcopy
+import logging
 
 import click
 import yaml
@@ -11,6 +12,8 @@ from cglims.config import make_config
 from cglims.pedigree import make_pedigree
 from cglims.constants import SEX_MAP
 from .utils import jsonify, fix_dump, ordered_reads
+
+log = logging.getLogger(__name__)
 
 
 @click.command()
@@ -146,19 +149,27 @@ def fillin(context, sample_id):
 
 def set_defaults(lims_sample):
     """Set default values for required UDFs."""
+    log.info("setting defaults for required fields")
     lims_sample.udf['Concentration (nM)'] = 'na'
+    lims_sample.udf['Volume (uL)'] = 'na'
     lims_sample.udf['Capture Library version'] = 'na'
     lims_sample.udf['Strain'] = 'na'
-    lims_sample.udf['source'] = 'other'
+    lims_sample.udf['Source'] = 'other'
     lims_sample.udf['Index type'] = 'na'
     lims_sample.udf['Index number'] = 'na'
     lims_sample.udf['Sample Buffer'] = 'na'
     lims_sample.udf['Reference Genome Microbial'] = 'na'
 
-    lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
+    if 'priority' in lims_sample.udf:
+        lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
+    else:
+        log.info("missing 'priority' => setting to 'standard'")
+        lims_sample.udf['priority'] = 'standard'
 
     process_only = lims_sample.udf.get('Process only if QC OK')
     if process_only == 'Ja':
+        log.info("translating 'QC OK' field: 'Ja' => 'yes'")
         lims_sample.udf['Process only if QC OK'] = 'yes'
     elif process_only is None:
+        log.info("setting 'QC OK' field to default: 'NA'")
         lims_sample.udf['Process only if QC OK'] = 'NA'
