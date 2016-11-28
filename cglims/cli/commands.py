@@ -129,3 +129,36 @@ def update(context, lims_id, field_key, new_value):
     if click.confirm(message_tmlt.format(field_key, old_value, new_value)):
         lims_sample.udf[field_key] = new_value
         lims_sample.put()
+
+
+@click.command()
+@click.argument('sample_id')
+@click.pass_context
+def fillin(context, sample_id):
+    """Fill in defaults for a LIMS sample."""
+    lims_api = api.connect(context.obj)
+    lims_sample = lims.samples(sample_id)
+    click.echo("filling in defaults...")
+    set_defaults(lims_sample)
+    lims_sample.put()
+    click.echo("saved new defaults")
+
+
+def set_defaults(lims_sample):
+    """Set default values for required UDFs."""
+    lims_sample.udf['Concentration (nM)'] = 'na'
+    lims_sample.udf['Capture Library version'] = 'na'
+    lims_sample.udf['Strain'] = 'na'
+    lims_sample.udf['source'] = 'other'
+    lims_sample.udf['Index type'] = 'na'
+    lims_sample.udf['Index number'] = 'na'
+    lims_sample.udf['Sample Buffer'] = 'na'
+    lims_sample.udf['Reference Genome Microbial'] = 'na'
+
+    lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
+
+    process_only = lims_sample.udf.get('Process only if QC OK')
+    if process_only == 'Ja':
+        lims_sample.udf['Process only if QC OK'] = 'yes'
+    elif process_only is None:
+        lims_sample.udf['Process only if QC OK'] = 'NA'

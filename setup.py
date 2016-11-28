@@ -74,6 +74,7 @@ setup(
             'get = cglims.cli.commands:get',
             'update = cglims.cli.commands:update',
             'export = cglims.export:export',
+            'fillin = cglims.cli.commands:fillin',
         ],
     },
 )
