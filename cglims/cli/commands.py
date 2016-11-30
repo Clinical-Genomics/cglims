@@ -94,6 +94,10 @@ def get(context, condense, project, identifier, fields):
 
         apptag = ApplicationTag(values['Sequencing Analysis'])
         values['is_human'] = apptag.is_human
+        values['is_production'] = (False if values['customer'] == 'cust000'
+                                   else True)
+        if values.get('tissue_type') != 'tumour':
+            values['pipeline'] = 'mip' if values['is_human'] else 'mwgs'
 
         if 'customer' in values and 'familyID' in values:
             values['case_id'] = "{}-{}".format(values['customer'],
