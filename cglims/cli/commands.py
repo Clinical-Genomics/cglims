@@ -11,6 +11,7 @@ from cglims.apptag import ApplicationTag
 from cglims.config import make_config
 from cglims.pedigree import make_pedigree
 from cglims.constants import SEX_MAP
+from cglims.panels import convert_panels
 from .utils import jsonify, fix_dump, ordered_reads
 
 log = logging.getLogger(__name__)
@@ -177,3 +178,13 @@ def set_defaults(lims_sample):
     elif process_only is None:
         log.info("setting 'QC OK' field to default: 'NA'")
         lims_sample.udf['Process only if QC OK'] = 'NA'
+
+
+@click.command()
+@click.argument('customer')
+@click.argument('default_panels', nargs=-1)
+@click.pass_context
+def panels(context, customer, default_panels):
+    """Convert between default panels and gene list panels."""
+    for panel_id in convert_panels(customer, default_panels):
+        click.echo(panel_id)

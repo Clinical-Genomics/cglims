@@ -46,6 +46,7 @@ TRASH*
 .vagrant/
 dev/
 _DEVELOP/
+*.coverage*
 
 # SublimeText
 *.sublime-*

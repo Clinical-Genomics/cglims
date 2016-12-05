@@ -81,7 +81,7 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
         family_id = families.pop()
 
     case_data = {
-        'customer': customer,
+        'owner': customer,
         'family': family_id,
         'default_gene_panels': gene_panels or list(all_panels),
         'samples': list(samples_data),
