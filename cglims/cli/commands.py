@@ -92,6 +92,7 @@ def get(context, condense, project, identifier, fields):
         values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
         values['reads'] = ordered_reads(values['Sequencing Analysis'])
         values['expected_reads'] = int(values['reads'] * .75)
+        values['project_id'] = sample.project.id
 
         apptag = ApplicationTag(values['Sequencing Analysis'])
         values['is_human'] = apptag.is_human
