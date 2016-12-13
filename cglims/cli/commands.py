@@ -67,9 +67,9 @@ def config(context, gene_panel, family_id, samples, customer_or_case, family):
 @click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.option('-p', '--project', is_flag=True, help='identifier is a project')
 @click.argument('identifier')
-@click.argument('fields', nargs=-1, required=False)
+@click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, identifier, fields):
+def get(context, condense, project, identifier, field):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
     if project:
@@ -105,10 +105,20 @@ def get(context, condense, project, identifier, fields):
             values['case_id'] = "{}-{}".format(values['customer'],
                                                values['familyID'])
 
-        if fields:
-            output = ' '.join(str(values[field]) for field in fields
-                              if field in values)
-            click.echo(output)
+        if 'customer' in values and 'Gene List' in values:
+            default_panels = values['Gene List'].split(';')
+            all_panels = convert_panels(values['customer'], default_panels)
+            values['panels'] = all_panels
+
+        if field:
+            if field not in values:
+                log.error("can't find UDF on sample: %s", field)
+                context.abort()
+            elif isinstance(values[field], list):
+                for item in values[field]:
+                    click.echo(item)
+            else:
+                click.echo(values[field])
         else:
             if condense:
                 dump = jsonify(values)
