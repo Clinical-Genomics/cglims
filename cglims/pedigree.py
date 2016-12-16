@@ -4,12 +4,12 @@ import io
 import copy
 import csv
 
+from .config import capture_kit, CAPTUREKIT_MAP
 from .exc import MissingLimsDataException
+
 
 PHENOTYPE_MAP = dict(affected='2', unaffected='1', unknown='0')
 SEX_MAP = dict(M='1', F='2', Unknown='other', unknown='other')
-CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
-                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5', 'other' : 'Agilent_SureSelectCRE.V1'}
 MANDATORY_HEADERS = ['Family ID', 'Individual ID', 'Paternal ID',
                      'Maternal ID', 'Sex', 'Phenotype']
 EXTRA_HEADERS = ['Clinical_db', 'Capture_kit', 'display_name',
@@ -37,7 +37,7 @@ def sequencing_type(app_tag):
         raise UnknownSequencingTypeError(app_tag)
 
 
-def capture_kit(lims, lims_sample, udf_key='Capture Library version',
+def old_capture_kit(lims, lims_sample, udf_key='Capture Library version',
                 udf_kitkey='Capture Library version'):
     """Figure out which capture kit has been used for the sample."""
     hybrizelib_id = '33'
