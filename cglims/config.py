@@ -68,6 +68,10 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
         for sample_panel in sample_panels:
             all_panels.add(sample_panel)
 
+        # add mandatory columns
+        data['father'] = data.get('father', 0)
+        data['mother'] = data.get('mother', 0)
+
         samples_data.append(data)
 
     if internalize:
