@@ -135,7 +135,9 @@ def capture_kit(lims, lims_sample, udf_key='Capture Library version',
                 udf_kitkey='SureSelect capture library/libraries used'):
     """Figure out which capture kit has been used for the sample."""
     hybrizelib_id = '669'
-    if udf_key in dict(lims_sample.udf.items()):
+    udfs = dict(lims_sample.udf.items())
+    sample_capture_kit = udfs.get(udf_key)
+    if sample_capture_kit and sample_capture_kit != 'NA':
         log.debug('prefer capture kit annotated on the sample level')
         capture_kit = lims_sample.udf[udf_key]
     else:
