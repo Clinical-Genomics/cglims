@@ -5,7 +5,8 @@ from .exc import MissingLimsDataException
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
-                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
+                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5', 
+                  'SureSelect Focused Exome':  'Agilent_SureSelectFocusedExome.V1',
                   'other': 'Agilent_SureSelectCRE.V1'}
 
 log = logging.getLogger(__name__)
@@ -131,9 +132,9 @@ def sequencing_type(app_tag):
 
 
 def capture_kit(lims, lims_sample, udf_key='Capture Library version',
-                udf_kitkey='Capture Library version'):
+                udf_kitkey='SureSelect capture library/libraries used'):
     """Figure out which capture kit has been used for the sample."""
-    hybrizelib_id = '33'
+    hybrizelib_id = '669'
     if udf_key in dict(lims_sample.udf.items()):
         log.debug('prefer capture kit annotated on the sample level')
         capture_kit = lims_sample.udf[udf_key]
