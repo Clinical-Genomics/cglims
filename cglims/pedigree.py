@@ -31,7 +31,7 @@ def sequencing_type(app_tag):
     """Parse application type to figure out type of sequencing."""
     if app_tag.startswith('WG'):
         return 'wgs'
-    elif app_tag.startswith('EX'):
+    elif app_tag.startswith('EX') or app_tag.startswith('EFT'):
         return 'wes'
     else:
         raise UnknownSequencingTypeError(app_tag)
