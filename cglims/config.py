@@ -5,8 +5,8 @@ from .exc import MissingLimsDataException
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
-                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5', 
-                  'SureSelect Focused Exome':  'Agilent_SureSelectFocusedExome.V1',
+                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
+                  'SureSelect Focused Exome': 'Agilent_SureSelectFocusedExome.V1',
                   'other': 'Agilent_SureSelectCRE.V1'}
 
 log = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ def expected_coverage(app_tag):
 
 
 def make_config(lims_api, lims_samples, customer=None, family_id=None,
-                gene_panels=None, internalize=True):
+                gene_panels=None):
     """Make the config for all samples."""
     active_samples = (lims_sample for lims_sample in lims_samples
                       if lims_sample.udf.get('cancelled') != 'yes')
@@ -75,8 +75,7 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
 
         samples_data.append(data)
 
-    if internalize:
-        samples_data = internalize_ids(samples_data)
+    samples_data = internalize_ids(samples_data)
 
     if customer is None:
         assert len(customers) == 1, "conflicting custs: {}".format(customers)
@@ -167,7 +166,7 @@ def internalize_ids(samples):
     for external_id, sample_data in sample_map.items():
         parent_fields = ['father', 'mother']
         for parent_field in parent_fields:
-            parent_id = sample_data.get('parent_field')
+            parent_id = sample_data.get(parent_field)
             if parent_id and parent_id != '0':
                 sample_data[parent_field] = sample_map[parent_id]['sample_id']
         yield sample_data
