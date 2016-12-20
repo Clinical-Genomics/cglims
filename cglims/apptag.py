@@ -8,6 +8,10 @@ MICROBIAL = ('MWX', 'MWG', 'MWL')
 HUMAN = PANELS + HISEQX[:-1] + ANALYSIS_ONLY
 
 
+class UnknownSequencingTypeError(Exception):
+    pass
+
+
 class ApplicationTag(str):
 
     def __init__(self, raw_tag):
@@ -38,6 +42,16 @@ class ApplicationTag(str):
     def is_microbial(self):
         """Determine if the order is for regular microbial samples."""
         return self.sequencing in MICROBIAL
+
+    @property
+    def sequencing_type(self):
+        """parse application type to figure out type of sequencing."""
+        if self.startswith('WG'):
+            return 'wgs'
+        elif self.startswith('EX') or self.startswith('EFT'):
+            return 'wes'
+        else:
+            raise unknownsequencingtypeerror(app_tag)
 
     @property
     def reads(self):

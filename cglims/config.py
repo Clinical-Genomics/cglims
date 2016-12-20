@@ -2,6 +2,7 @@
 import logging
 
 from .exc import MissingLimsDataException
+from .apptag import ApplicationTag, UnknownSequencingTypeError
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
@@ -16,14 +17,15 @@ def gather_data(lims_sample):
     """Gather analysis/pedigree data about a sample."""
     customer = lims_sample.udf['customer']
     family_id = lims_sample.udf['familyID']
-    app_tag = lims_sample.udf['Sequencing Analysis']
     sex_letter = lims_sample.udf['Gender']
+    app_tag = ApplicationTag(lims_sample.udf['Sequencing Analysis'])
+
     data = {
         'sample_id': get_sampleid(lims_sample),
         'sample_name': lims_sample.name,
         'sex': SEX_MAP[sex_letter],
         'phenotype': lims_sample.udf['Status'].lower(),
-        'analysis_type': sequencing_type(app_tag),
+        'analysis_type': app_tag.sequencing_type,
         'expected_coverage': expected_coverage(app_tag),
     }
     for parent_field in ('fatherID', 'motherID'):
@@ -111,23 +113,9 @@ def get_genepanels(lims_sample):
     return genepanel_str.split(';')
 
 
-class UnknownSequencingTypeError(Exception):
-    pass
-
-
 def get_sampleid(lims_sample, key='Clinical Genomics ID'):
     """Get the expected LIMS or Clinical Genomics ID."""
     return lims_sample.udf.get(key) or lims_sample.id
-
-
-def sequencing_type(app_tag):
-    """Parse application type to figure out type of sequencing."""
-    if app_tag.startswith('WG'):
-        return 'wgs'
-    elif app_tag.startswith('EX'):
-        return 'wes'
-    else:
-        raise UnknownSequencingTypeError(app_tag)
 
 
 def capture_kit(lims, lims_sample, udf_key='Capture Library version',
