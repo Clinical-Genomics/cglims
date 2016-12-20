@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Handle gene panels."""
 
-COLLABORATORS = ('cust002', 'cust003', 'cust004')
+COLLABORATORS = ('cust000', 'cust002', 'cust003', 'cust004')
 MASTER_LIST = ('ENDO', 'EP', 'IEM', 'IBMFS', 'mtDNA', 'MIT', 'OMIM', 'PIDCAD',
                'PID', 'SKD')
 COMBOS = {
