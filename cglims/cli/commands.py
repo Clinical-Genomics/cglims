@@ -107,8 +107,7 @@ def get(context, condense, project, identifier, field):
 
         if 'customer' in values and 'Gene List' in values:
             default_panels = values['Gene List'].split(';')
-            all_panels = convert_panels(values['customer'], default_panels)
-            values['panels'] = all_panels
+            values['panels'] = default_panels
 
         if field:
             if field not in values:
