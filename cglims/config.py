@@ -2,6 +2,7 @@
 import logging
 
 from .exc import MissingLimsDataException
+from .panels import convert_panels
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
@@ -84,10 +85,12 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
         assert len(families) == 1, "conflicting families: {}".format(families)
         family_id = families.pop()
 
+    gene_panels = gene_panels or list(all_panels)
     case_data = {
         'owner': customer,
         'family': family_id,
-        'default_gene_panels': gene_panels or list(all_panels),
+        'default_gene_panels': gene_panels,
+        'gene_panels': convert_panels(customer, gene_panels),
         'samples': list(samples_data),
     }
     return case_data
