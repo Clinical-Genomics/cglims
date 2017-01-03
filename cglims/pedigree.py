@@ -38,7 +38,7 @@ def sequencing_type(app_tag):
 
 
 def old_capture_kit(lims, lims_sample, udf_key='Capture Library version',
-                udf_kitkey='Capture Library version'):
+                    udf_kitkey='Capture Library version'):
     """Figure out which capture kit has been used for the sample."""
     hybrizelib_id = '33'
     if udf_key in dict(lims_sample.udf.items()):

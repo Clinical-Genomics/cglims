@@ -50,7 +50,8 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
                 gene_panels=None):
     """Make the config for all samples."""
     active_samples = (lims_sample for lims_sample in lims_samples
-                      if lims_sample.udf.get('cancelled') != 'yes')
+                      if (lims_sample.udf.get('cancelled') != 'yes' and
+                          lims_sample.udf.get('tumor') != 'yes'))
 
     # filter out cancelled samples
     samples_data = []
