@@ -12,7 +12,7 @@ from cglims.config import make_config
 from cglims.pedigree import make_pedigree
 from cglims.constants import SEX_MAP
 from cglims.panels import convert_panels
-from .utils import jsonify, fix_dump, ordered_reads
+from .utils import jsonify, fix_dump, ordered_reads, relevant_samples
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,9 @@ def config(context, gene_panel, family_id, samples, customer_or_case, family):
         lims_samples = lims_api.case(customer, family)
     elif samples:
         lims_samples = [lims_api.sample(sample_id) for sample_id in samples]
-    data = make_config(lims_api, lims_samples, family_id=family_id,
+
+    included_samples = relevant_samples(lims_samples)
+    data = make_config(lims_api, included_samples, family_id=family_id,
                        gene_panels=gene_panels)
     dump = yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
     click.echo(fix_dump(dump))
@@ -66,23 +68,29 @@ def config(context, gene_panel, family_id, samples, customer_or_case, family):
 @click.command()
 @click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.option('-p', '--project', is_flag=True, help='identifier is a project')
+@click.option('--all', '--all-samples', is_flas=True,
+              help='include cancelled/tumor samples')
 @click.argument('identifier')
 @click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, identifier, field):
+def get(context, condense, project, identifier, field, all_samples):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
     if project:
-        samples = api.get_samples(projectname=identifier)
+        lims_samples = api.get_samples(projectname=identifier)
     elif identifier.startswith('cust'):
         # look up samples in a case
-        samples = lims.case(*identifier.split('-', 1))
+        lims_samples = lims.case(*identifier.split('-', 1))
     else:
         # look up a single sample
         is_cgid = True if identifier[0].isdigit() else False
-        samples = [lims.sample(identifier, is_cgid=is_cgid)]
+        lims_samples = [lims.sample(identifier, is_cgid=is_cgid)]
 
-    for sample in samples:
+    if len(lims_samples) > 1 and not all_samples:
+        # filter out tumor and cancelled samples
+        lims_samples = relevant_samples(lims_samples)
+
+    for sample in lims_samples:
         values = deepcopy(sample.udf._lookup)
         values['id'] = sample.id
         values['name'] = sample.name
