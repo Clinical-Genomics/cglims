@@ -6,6 +6,7 @@ from .panels import convert_panels
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
+                  'SureSelect CRE': 'Agilent_SureSelectCRE.V1',
                   'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
                   'SureSelect Focused Exome': 'Agilent_SureSelectFocusedExome.V1',
                   'other': 'Agilent_SureSelectCRE.V1'}
