@@ -68,7 +68,7 @@ def config(context, gene_panel, family_id, samples, customer_or_case, family):
 @click.command()
 @click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.option('-p', '--project', is_flag=True, help='identifier is a project')
-@click.option('--all', '--all-samples', is_flas=True,
+@click.option('--all', '--all-samples', is_flag=True,
               help='include cancelled/tumor samples')
 @click.argument('identifier')
 @click.argument('field', required=False)
