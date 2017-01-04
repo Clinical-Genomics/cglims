@@ -53,7 +53,7 @@ def set_missingreads(lims_sample, force=False):
     app_tag = ApplicationTag(raw_apptag)
     target_amount = app_tag.reads
     missing_reads = lims_sample.udf.get('Reads missing (M)')
-    if not force and missing_reads:
+    if not force and missing_reads is not None:
         log.warn("missing reads already set: %s", missing_reads)
     else:
         lims_sample.udf['Reads missing (M)'] = target_amount
@@ -65,11 +65,11 @@ def set_apptagversion(lims_sample, version, force=False):
     """Set the Application Tag Version for a sample."""
     current_version = lims_sample.udf.get('Application Tag Version')
     if not force and current_version:
+        log.warn("application tag version already set: %s", current_version)
+    else:
         lims_sample.udf['Application Tag Version'] = version
         log.info("updating application tag version")
         lims_sample.put()
-    else:
-        log.warn("application tag version already set: %s", current_version)
 
 
 def set_trioapptag(lims, lims_sample):
