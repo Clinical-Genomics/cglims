@@ -52,11 +52,11 @@ def set_missingreads(lims_sample, force=False):
     raw_apptag = lims_sample.udf['Sequencing Analysis']
     app_tag = ApplicationTag(raw_apptag)
     target_amount = app_tag.reads
-    missing_reads = lims_sample.udf.get('Reads Missing (M)')
+    missing_reads = lims_sample.udf.get('Reads missing (M)')
     if not force and missing_reads:
         log.warn("missing reads already set: %s", missing_reads)
     else:
-        lims_sample.udf['Reads Missing (M)'] = target_amount
+        lims_sample.udf['Reads missing (M)'] = target_amount
         log.info("updating reads missing")
         lims_sample.put()
 
