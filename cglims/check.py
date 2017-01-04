@@ -79,14 +79,14 @@ def set_trioapptag(lims, lims_sample):
     if len(related_samples) == 3:
         log.debug("found three related samples")
         # Q: should more than 3 samples be allowed?
-        app_tags = set(sample.udf['Sequencing Analsysis'] for sample in
+        app_tags = set(sample.udf['Sequencing Analysis'] for sample in
                        related_samples)
         allowed_tags = set(['WGSPCFC030', 'WGTPCFC030'])
         if len(app_tags.difference(allowed_tags)) == 0:
             # then we can update the application tag for the sample
             log.info("found 3 related samples with WGS application tag")
             log.info("updating to trio WGS tag: %s", lims_sample.id)
-            lims_sample.udf['Sequencing Analsysis'] == 'WGTPCFC030'
+            lims_sample.udf['Sequencing Analysis'] == 'WGTPCFC030'
             lims_sample.put()
 
 
