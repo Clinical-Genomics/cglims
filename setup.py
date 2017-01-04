@@ -77,6 +77,7 @@ setup(
             'fillin = cglims.cli.commands:fillin',
             'panels = cglims.cli.commands:panels',
             'pedigree = cglims.cli.commands:pedigree',
+            'check = cglims.check:check',
         ],
     },
 )

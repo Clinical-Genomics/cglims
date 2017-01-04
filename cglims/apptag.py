@@ -33,7 +33,7 @@ class ApplicationTag(str):
     def is_panel(self):
         """Determine if sequencing if sequence capture."""
         return self.sequencing in PANELS
-    
+
     @property
     def analysis_type(self):
         """Return analysis time from tag."""
