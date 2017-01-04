@@ -173,15 +173,15 @@ def fillin(context, sample_id):
 def set_defaults(lims_sample):
     """Set default values for required UDFs."""
     log.info("setting defaults for required fields")
-    lims_sample.udf['Concentration (nM)'] = 'na'
-    lims_sample.udf['Volume (uL)'] = 'na'
-    lims_sample.udf['Capture Library version'] = 'na'
-    lims_sample.udf['Strain'] = 'na'
+    lims_sample.udf['Concentration (nM)'] = 'NA'
+    lims_sample.udf['Volume (uL)'] = 'NA'
+    lims_sample.udf['Capture Library version'] = 'NA'
+    lims_sample.udf['Strain'] = 'NA'
     lims_sample.udf['Source'] = 'other'
-    lims_sample.udf['Index type'] = 'na'
-    lims_sample.udf['Index number'] = 'na'
-    lims_sample.udf['Sample Buffer'] = 'na'
-    lims_sample.udf['Reference Genome Microbial'] = 'na'
+    lims_sample.udf['Index type'] = 'NA'
+    lims_sample.udf['Index number'] = 'NA'
+    lims_sample.udf['Sample Buffer'] = 'NA'
+    lims_sample.udf['Reference Genome Microbial'] = 'NA'
 
     if 'priority' in lims_sample.udf:
         lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
