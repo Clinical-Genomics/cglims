@@ -55,6 +55,7 @@ def set_missingreads(lims_sample, force=False):
     if not force and lims_sample.udf.get('Reads Missing (M)'):
         raise ValueError("sample already processed: %s", lims_sample.id)
     lims_sample.udf['Reads Missing (M)'] = target_amount
+    log.info("updating reads missing")
     lims_sample.put()
 
 
@@ -63,6 +64,7 @@ def set_apptagversion(lims_sample, version, force=False):
     current_version = lims_sample.udf.get('Application Tag Version')
     if not force and current_version:
         lims_sample.udf['Application Tag Version'] = version
+        log.info("updating application tag version")
         lims_sample.put()
     else:
         log.warn("application tag version already set - use 'force'")
@@ -83,6 +85,7 @@ def set_trioapptag(lims, lims_sample):
             log.info("found 3 related samples with WGS application tag")
             log.info("updating to trio WGS tag: %s", lims_sample.id)
             lims_sample.udf['Sequencing Analsysis'] == 'WGTPCFC030'
+            log.info("updating application tag for WGS trio sample")
             lims_sample.put()
 
 
