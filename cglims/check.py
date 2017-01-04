@@ -11,28 +11,40 @@ log = logging.getLogger(__name__)
 
 
 @click.command()
+@click.option('-p', '--project', help='LIMS project id')
+@click.option('-l', '--limit', default=20, help='number of samples to fetch')
+@click.pass_context
+def samples(context, project, limit):
+    """Fetch projects from the database."""
+    lims = api.connect(context.obj)
+    samples = lims.get_samples(projectlimsid=project)
+    if project is None:
+        samples = samples[:limit]
+    for sample in samples:
+        click.echo(sample.id)
+
+
+@click.command()
 @click.option('-u', '--update', is_flag=True, help='update sample UDFs')
 @click.option('-f', '--force', is_flag=True, help='update existing values')
 @click.option('-v', '--version', type=int, help='application tag version')
-@click.argument('project_id')
+@click.argument('lims_id')
 @click.pass_context
-def check(context, update, version, force, project_id):
+def check(context, update, version, force, lims_id):
     """Check samples in a project."""
     lims = api.connect(context.obj)
     # get sample in the project
-    lims_samples = lims.get_samples(projectlimsid=project_id)
-    for lims_sample in lims_samples:
-        log.info("checking sample: %s", lims_sample.id)
-        check_samplename(lims_sample)
-        check_duplicatename(lims, lims_sample)
-        check_capturekit(lims_sample)
-        check_familymembers(lims, lims_sample)
+    lims_sample = lims.sample(lims_id)
+    check_samplename(lims_sample)
+    check_duplicatename(lims, lims_sample)
+    check_capturekit(lims_sample)
+    check_familymembers(lims, lims_sample)
 
-        if update:
-            set_missingreads(lims_sample, force=force)
-            set_trioapptag(lims, lims_sample)
-            if version:
-                set_apptagversion(lims_sample, version, force=force)
+    if update:
+        set_missingreads(lims_sample, force=force)
+        set_trioapptag(lims, lims_sample)
+        if version:
+            set_apptagversion(lims_sample, version, force=force)
 
 
 def set_missingreads(lims_sample, force=False):

@@ -78,6 +78,7 @@ setup(
             'panels = cglims.cli.commands:panels',
             'pedigree = cglims.cli.commands:pedigree',
             'check = cglims.check:check',
+            'samples = cglims.check:samples',
         ],
     },
 )
