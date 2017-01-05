@@ -61,6 +61,11 @@ def config(context, gene_panel, family_id, samples, customer_or_case, family):
     included_samples = relevant_samples(lims_samples)
     data = make_config(lims_api, included_samples, family_id=family_id,
                        gene_panels=gene_panels)
+    # handle single sample cases with 'unknown' phenotype
+    if len(data['samples']) == 1:
+        if data['samples'][0]['phenotype'] == 'unknown':
+            log.info("setting 'unknown' phenotype to 'unaffected'")
+            data['samples'][0]['phenotype'] = 'unaffected'
     dump = yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
     click.echo(fix_dump(dump))
 
