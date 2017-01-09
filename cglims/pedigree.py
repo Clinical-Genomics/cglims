@@ -6,6 +6,7 @@ import csv
 
 from .config import capture_kit, CAPTUREKIT_MAP
 from .exc import MissingLimsDataException
+from .apptag import ApplicationTag, UnknownSequencingTypeError
 
 
 PHENOTYPE_MAP = dict(affected='2', unaffected='1', unknown='0')
@@ -18,23 +19,9 @@ EXTRA_HEADERS = ['Clinical_db', 'Capture_kit', 'display_name',
 log = logging.getLogger(__name__)
 
 
-class UnknownSequencingTypeError(Exception):
-    pass
-
-
 def get_sampleid(lims_sample, key='Clinical Genomics ID'):
     """Get the expected LIMS or Clinical Genomics ID."""
     return lims_sample.udf.get(key) or lims_sample.id
-
-
-def sequencing_type(app_tag):
-    """Parse application type to figure out type of sequencing."""
-    if app_tag.startswith('WG'):
-        return 'wgs'
-    elif app_tag.startswith('EX') or app_tag.startswith('EFT'):
-        return 'wes'
-    else:
-        raise UnknownSequencingTypeError(app_tag)
 
 
 def old_capture_kit(lims, lims_sample, udf_key='Capture Library version',
@@ -87,7 +74,7 @@ def make_pedigree(api, lims_samples, family_id=None, gene_panel=None,
 
 def convert_sample(api, lims_sample, gene_panel=None):
     """Extract information from LIMS samples that relate to pedigree."""
-    app_tag = lims_sample.udf['Sequencing Analysis']
+    app_tag = ApplicationTag(lims_sample.udf['Sequencing Analysis'])
     affection_status = lims_sample.udf['Status'].lower()
     sex_letter = lims_sample.udf['Gender']
     if gene_panel:
@@ -120,7 +107,7 @@ def convert_sample(api, lims_sample, gene_panel=None):
         'Sex': SEX_MAP[sex_letter],
         'Phenotype': ped_phenotype,
         'Clinical_db': gene_panels,
-        'Sequencing_type': sequencing_type(app_tag),
+        'Sequencing_type': app_tag.sequencing_type,
         'internal_id': get_sampleid(lims_sample),
     }
 
