@@ -3,9 +3,11 @@ import logging
 
 from .exc import MissingLimsDataException
 from .apptag import ApplicationTag, UnknownSequencingTypeError
+from .panels import convert_panels
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
+                  'SureSelect CRE': 'Agilent_SureSelectCRE.V1',
                   'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
                   'SureSelect Focused Exome': 'Agilent_SureSelectFocusedExome.V1',
                   'other': 'Agilent_SureSelectCRE.V1'}
@@ -50,15 +52,11 @@ def expected_coverage(app_tag):
 def make_config(lims_api, lims_samples, customer=None, family_id=None,
                 gene_panels=None):
     """Make the config for all samples."""
-    active_samples = (lims_sample for lims_sample in lims_samples
-                      if lims_sample.udf.get('cancelled') != 'yes')
-
-    # filter out cancelled samples
     samples_data = []
     customers = set()
     families = set()
     all_panels = set()
-    for lims_sample in active_samples:
+    for lims_sample in lims_samples:
         sample_customer, sample_family, data = gather_data(lims_sample)
         customers.add(sample_customer)
         families.add(sample_family)
@@ -86,10 +84,12 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
         assert len(families) == 1, "conflicting families: {}".format(families)
         family_id = families.pop()
 
+    gene_panels = gene_panels or list(all_panels)
     case_data = {
         'owner': customer,
         'family': family_id,
-        'default_gene_panels': gene_panels or list(all_panels),
+        'default_gene_panels': gene_panels,
+        'gene_panels': convert_panels(customer, gene_panels),
         'samples': list(samples_data),
     }
     return case_data

@@ -39,6 +39,16 @@ class ApplicationTag(str):
         return self.sequencing in PANELS
 
     @property
+    def analysis_type(self):
+        """Return analysis time from tag."""
+        if self.sequencing.startswith('WG'):
+            return 'wgs'
+        elif self.sequencing in PANELS or self.sequencing.startswith('EX'):
+            return 'wes'
+        else:
+            return None
+
+    @property
     def is_microbial(self):
         """Determine if the order is for regular microbial samples."""
         return self.sequencing in MICROBIAL
