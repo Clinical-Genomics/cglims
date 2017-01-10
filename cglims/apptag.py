@@ -61,7 +61,7 @@ class ApplicationTag(str):
         elif self.startswith('EX') or self.startswith('EFT'):
             return 'wes'
         else:
-            raise unknownsequencingtypeerror(app_tag)
+            raise UnknownSequencingTypeError(self.sequencing)
 
     @property
     def reads(self):
