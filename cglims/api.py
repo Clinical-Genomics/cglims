@@ -11,6 +11,49 @@ def connect(config):
     api = ClinicalLims(config['host'], config['username'], config['password'])
     return api
 
+class ClinicalSample:
+
+    def __init__(self, sample):
+        """ Wrapper around the genologics Sample class
+
+        Args:
+            sample (genologics.Sample): the sample instance to extend
+        """
+        self.lims = sample
+        self._pipeline = None
+        self._apptag = None
+
+
+    @property
+    def apptag(self):
+        """ Init an instance of ApplicationTag based on the sample's apptag
+
+        Returns: ApplicationTag.
+
+        """
+
+        if self._apptag == None:
+            self._apptag = ApplicationTag(self.lims.udf['Sequencing Analysis'])
+
+        return self._apptag
+
+
+    @property
+    def pipeline(self):
+        """ Determines in which pipeline the sample needs to be run.
+
+        Returns (str): 'mip' or 'mwgs'
+
+        """
+
+        if self._pipeline:
+            return self._pipeline
+
+        if self.lims.get('tissue_type') != 'tumour':
+            self._pipeline = 'mip' if self.apptag.is_human else 'mwgs'
+
+        return self._pipeline
+
 
 class ClinicalLims(Lims):
 
@@ -35,12 +78,6 @@ class ClinicalLims(Lims):
                 return None
         else:
             lims_sample = Sample(self, id=lims_id)
-
-        # add dynamic property
-        if lims_sample.get('tissue_type') != 'tumour':
-            apptag = ApplicationTag(lims_sample.udf['Sequencing Analysis'])
-            pipeline = 'mip' if apptag.is_human else 'mwgs'
-        lims_sample.__dict__['pipeline'] = pipeline
 
         return lims_sample
 
