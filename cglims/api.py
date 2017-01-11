@@ -2,6 +2,7 @@
 from genologics.entities import Sample
 from genologics.lims import Lims
 
+from cglims.apptag import ApplicationTag
 from cglims.exc import MultipleSamplesError
 
 
@@ -34,6 +35,13 @@ class ClinicalLims(Lims):
                 return None
         else:
             lims_sample = Sample(self, id=lims_id)
+
+        # add dynamic property
+        if lims_sample.get('tissue_type') != 'tumour':
+            apptag = ApplicationTag(lims_sample.udf['Sequencing Analysis'])
+            pipeline = 'mip' if apptag.is_human else 'mwgs'
+        lims_sample.__dict__['pipeline'] = pipeline
+
         return lims_sample
 
 
