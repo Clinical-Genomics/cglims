@@ -20,7 +20,7 @@ class ClinicalSample:
             sample (genologics.Sample): the sample instance to extend
         """
         self.lims = sample
-        self._apptag = None
+        self._apptag = ApplicationTag(self.lims.udf['Sequencing Analysis'])
 
 
     @property
@@ -28,12 +28,7 @@ class ClinicalSample:
         """ Init an instance of ApplicationTag based on the sample's apptag
 
         Returns: ApplicationTag.
-
         """
-
-        if self._apptag == None:
-            self._apptag = ApplicationTag(self.lims.udf['Sequencing Analysis'])
-
         return self._apptag
 
 
@@ -42,9 +37,7 @@ class ClinicalSample:
         """ Determines in which pipeline the sample needs to be run.
 
         Returns (str): 'mip' or 'mwgs'
-
         """
-
         if self.lims.get('tissue_type') != 'tumour':
             return 'mip' if self.apptag.is_human else 'mwgs'
 
