@@ -8,7 +8,6 @@ import yaml
 
 from cglims import api
 from cglims.api import ClinicalSample
-from cglims.apptag import ApplicationTag
 from cglims.config import make_config
 from cglims.pedigree import make_pedigree
 from cglims.constants import SEX_MAP
@@ -108,11 +107,10 @@ def get(context, condense, project, identifier, field, all_samples):
         values['expected_reads'] = int(values['reads'] * .75)
         values['project_id'] = sample.project.id
 
-        apptag = ApplicationTag(values['Sequencing Analysis'])
-        values['is_human'] = apptag.is_human
+        clinical_sample = ClinicalSample(sample) # upgrade!
+        values['is_human'] = clinical_sample.apptag.is_human
         values['is_production'] = (False if values['customer'] == 'cust000'
                                    else True)
-        clinical_sample = ClinicalSample(sample) # upgrade!
         values['pipeline'] = clinical_sample.pipeline
 
         if 'customer' in values and 'familyID' in values:
