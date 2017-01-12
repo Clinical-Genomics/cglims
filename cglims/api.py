@@ -20,7 +20,6 @@ class ClinicalSample:
             sample (genologics.Sample): the sample instance to extend
         """
         self.lims = sample
-        self._pipeline = None
         self._apptag = None
 
 
@@ -46,13 +45,10 @@ class ClinicalSample:
 
         """
 
-        if self._pipeline:
-            return self._pipeline
-
         if self.lims.get('tissue_type') != 'tumour':
-            self._pipeline = 'mip' if self.apptag.is_human else 'mwgs'
+            return 'mip' if self.apptag.is_human else 'mwgs'
 
-        return self._pipeline
+        return None
 
 
 class ClinicalLims(Lims):
