@@ -2,6 +2,7 @@
 from genologics.entities import Sample
 from genologics.lims import Lims
 
+from cglims.apptag import ApplicationTag
 from cglims.exc import MultipleSamplesError
 
 
@@ -9,6 +10,38 @@ def connect(config):
     """Connect and return API reference."""
     api = ClinicalLims(config['host'], config['username'], config['password'])
     return api
+
+class ClinicalSample:
+
+    def __init__(self, sample):
+        """ Wrapper around the genologics Sample class
+
+        Args:
+            sample (genologics.Sample): the sample instance to extend
+        """
+        self.lims = sample
+        self._apptag = ApplicationTag(self.lims.udf['Sequencing Analysis'])
+
+
+    @property
+    def apptag(self):
+        """ Init an instance of ApplicationTag based on the sample's apptag
+
+        Returns: ApplicationTag.
+        """
+        return self._apptag
+
+
+    @property
+    def pipeline(self):
+        """ Determines in which pipeline the sample needs to be run.
+
+        Returns (str): 'mip' or 'mwgs'
+        """
+        if self.lims.get('tissue_type') != 'tumour':
+            return 'mip' if self.apptag.is_human else 'mwgs'
+
+        return None
 
 
 class ClinicalLims(Lims):
@@ -34,6 +67,7 @@ class ClinicalLims(Lims):
                 return None
         else:
             lims_sample = Sample(self, id=lims_id)
+
         return lims_sample
 
 
