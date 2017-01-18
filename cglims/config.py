@@ -50,7 +50,7 @@ def expected_coverage(app_tag):
 
 
 def make_config(lims_api, lims_samples, customer=None, family_id=None,
-                gene_panels=None):
+                gene_panels=None, capture_kit=None):
     """Make the config for all samples."""
     samples_data = []
     customers = set()
@@ -63,7 +63,7 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
 
         # fetch capture kit if sample is exome sequenced
         if data['analysis_type'] == 'wes':
-            data['capture_kit'] = capture_kit(lims_api, lims_sample)
+            data['capture_kit'] = capture_kit or get_capture_kit(lims_api, lims_sample)
 
         sample_panels = get_genepanels(lims_sample)
         for sample_panel in sample_panels:
@@ -118,8 +118,8 @@ def get_sampleid(lims_sample, key='Clinical Genomics ID'):
     return lims_sample.udf.get(key) or lims_sample.id
 
 
-def capture_kit(lims, lims_sample, udf_key='Capture Library version',
-                udf_kitkey='SureSelect capture library/libraries used'):
+def get_capture_kit(lims, lims_sample, udf_key='Capture Library version',
+                    udf_kitkey='SureSelect capture library/libraries used'):
     """Figure out which capture kit has been used for the sample."""
     hybrizelib_id = '669'
     udfs = dict(lims_sample.udf.items())
