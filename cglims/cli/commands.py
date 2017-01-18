@@ -8,12 +8,13 @@ import yaml
 
 from cglims import api
 from cglims.api import ClinicalSample
-from cglims.config import make_config
+from cglims.config import make_config, CAPTUREKIT_MAP
 from cglims.pedigree import make_pedigree
 from cglims.constants import SEX_MAP
 from cglims.panels import convert_panels
 from .utils import jsonify, fix_dump, ordered_reads, relevant_samples
 
+CAPTUREKITS = CAPTUREKIT_MAP.values()
 log = logging.getLogger(__name__)
 
 
@@ -42,7 +43,8 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
 @click.option('-g', '--gene-panel', help='custom gene panel')
 @click.option('-f', '--family-id', help='custom family id')
 @click.option('-s', '--samples', multiple=True, help='included samples')
-@click.option('-c', '--capture-kit', help='custom capture kit')
+@click.option('-c', '--capture-kit', type=click.Choice(CAPTUREKITS),
+              help='custom capture kit')
 @click.argument('customer_or_case')
 @click.argument('family', required=False)
 @click.pass_context
