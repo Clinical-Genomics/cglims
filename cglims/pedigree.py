@@ -4,7 +4,7 @@ import io
 import copy
 import csv
 
-from .config import capture_kit, CAPTUREKIT_MAP
+from .config import get_capture_kit, CAPTUREKIT_MAP
 from .exc import MissingLimsDataException
 from .apptag import ApplicationTag, UnknownSequencingTypeError
 
@@ -113,7 +113,7 @@ def convert_sample(api, lims_sample, gene_panel=None):
 
     # fetch capture kit if sample is exome sequenced
     if data['Sequencing_type'] == 'wes':
-        data['Capture_kit'] = capture_kit(api, lims_sample)
+        data['Capture_kit'] = get_capture_kit(api, lims_sample)
     else:
         data['Capture_kit'] = None
 
