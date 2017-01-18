@@ -75,6 +75,6 @@ class ApplicationTag(str):
         elif type_id == 'C':
             if self.is_panel:
                 raise ValueError("can't convert coverage for panels")
-            return number * READS_PER_1X
+            return number * 10000000 # but should be: number * READS_PER_1X
         else:
             raise ValueError("unknown read type id: {}".format(type_id))
