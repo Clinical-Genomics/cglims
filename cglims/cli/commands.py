@@ -190,9 +190,21 @@ def set_defaults(lims_sample):
     lims_sample.udf['Index number'] = 'NA'
     lims_sample.udf['Sample Buffer'] = 'NA'
     lims_sample.udf['Reference Genome Microbial'] = 'NA'
+    if lims_sample.udf['Gender']:
+        lims_sample.udf['Gender'] = lims_sample.udf['Gender'].lower()
+    if lims_sample.udf['Status']:
+        lims_sample.udf['Status'] = lims_sample.udf['Status'].lower()
+
+    if lims_sample.udf['Source'] == 'Blod':
+        log.info("updating 'Source': 'Blod' => 'blood'")
+        lims_sample.udf['Source'] = 'blood'
 
     if 'priority' in lims_sample.udf:
-        lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
+        if lims_sample.udf['priority'] == 'prioriterad':
+            log.info("updating 'priority': 'prioriterad' => 'priority'")
+            lims_sample.udf['priority'] = 'priority'
+        else:
+            lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
     else:
         log.info("missing 'priority' => setting to 'standard'")
         lims_sample.udf['priority'] = 'standard'
@@ -201,6 +213,9 @@ def set_defaults(lims_sample):
     if process_only == 'Ja':
         log.info("translating 'QC OK' field: 'Ja' => 'yes'")
         lims_sample.udf['Process only if QC OK'] = 'yes'
+    elif process_only == 'Nej':
+        log.info("translating 'QC OK' field: 'Nej' => 'no'")
+        lims_sample.udf['Process only if QC OK'] = 'no'
     elif process_only is None:
         log.info("setting 'QC OK' field to default: 'NA'")
         lims_sample.udf['Process only if QC OK'] = 'NA'
