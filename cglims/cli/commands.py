@@ -77,19 +77,22 @@ def config(context, gene_panel, family_id, samples, capture_kit, customer_or_cas
 @click.command()
 @click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.option('-p', '--project', is_flag=True, help='identifier is a project')
+@click.option('-n', '--external', is_flag=True, help='identifier is the customer sample name')
 @click.option('--all', '--all-samples', is_flag=True,
               help='include cancelled/tumor samples')
 @click.argument('identifier')
 @click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, identifier, field, all_samples):
+def get(context, condense, project, external, identifier, field, all_samples):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
     if project:
-        lims_samples = api.get_samples(projectname=identifier)
+        lims_samples = lims.get_samples(projectname=identifier)
     elif identifier.startswith('cust'):
         # look up samples in a case
         lims_samples = lims.case(*identifier.split('-', 1))
+    elif external:
+        lims_samples = lims.get_samples(name=identifier)
     else:
         # look up a single sample
         is_cgid = True if identifier[0].isdigit() else False
