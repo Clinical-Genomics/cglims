@@ -87,7 +87,7 @@ def get(context, condense, project, external, identifier, field, all_samples):
     """Get information from LIMS: either sample or family samples."""
     lims = api.connect(context.obj)
     if project:
-        lims_samples = lims.get_samples(projectname=identifier)
+        lims_samples = lims.get_samples(projectlimsid=identifier)
     elif identifier.startswith('cust'):
         # look up samples in a case
         lims_samples = lims.case(*identifier.split('-', 1))
