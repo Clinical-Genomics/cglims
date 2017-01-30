@@ -64,6 +64,17 @@ class ApplicationTag(str):
             raise UnknownSequencingTypeError(self.sequencing)
 
     @property
+    def is_external(self):
+        """ Determines whether or not a sample is externally sequenced.
+
+        Returns (bool): True when external, False otherwise
+        """
+
+        if self.sequencing.endswith('X'):
+            return True
+        return False
+
+    @property
     def reads(self):
         """Calculate ordered number of reads."""
         type_id = self[-4]
