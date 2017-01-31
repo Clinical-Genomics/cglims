@@ -11,6 +11,7 @@ CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
                   'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
                   'SureSelect Focused Exome': 'Agilent_SureSelectFocusedExome.V1',
                   'other': 'Agilent_SureSelectCRE.V1'}
+LATEST_CAPTUREKIT = 'Agilent_SureSelectCRE.V1'
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +65,9 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
         # fetch capture kit if sample is exome sequenced
         if data['analysis_type'] == 'wes':
             data['capture_kit'] = capture_kit or get_capture_kit(lims_api, lims_sample)
+        else:
+            # wgs: just fill in a default capture kit for coverage analysis
+            data['capture_kit'] = LATEST_CAPTUREKIT
 
         sample_panels = get_genepanels(lims_sample)
         for sample_panel in sample_panels:
