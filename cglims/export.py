@@ -24,24 +24,28 @@ def export(context, customer_or_case, family_id):
     else:
         customer, family_id = customer_or_case.split('-', 1)
     lims_samples = lims.case(customer, family_id)
-    case_data = export_case(lims_samples)
+    case_data = export_case(lims, lims_samples)
 
     raw_dump = yaml.safe_dump(case_data, default_flow_style=False,
                               allow_unicode=True)
     click.echo(raw_dump)
 
 
-def export_case(lims_samples):
+def export_case(lims, lims_samples):
     """Gather data about a case, multiple samples in LIMS."""
-    families = (family_data(lims_sample) for lims_sample in lims_samples)
-    samples = (sample_data(lims_sample) for lims_sample in lims_samples)
+    families = (get_familydata(lims_sample) for lims_sample in lims_samples)
+    samples = []
+    for lims_sample in lims_samples:
+        artifacts = lims.get_artifacts(samplelimsid=lims_sample.id)
+        data = sample_data(lims_sample, artifacts)
+        samples.append(data)
 
-    data = consolidate_family(families)
-    data['samples'] = list(samples)
-    return data
+    family_data = consolidate_family(families)
+    family_data['samples'] = list(samples)
+    return family_data
 
 
-def family_data(lims_sample):
+def get_familydata(lims_sample):
     """Parse out common (family-level) data."""
     data = {
         'customer': lims_sample.udf['customer'],
@@ -54,7 +58,7 @@ def family_data(lims_sample):
     return data
 
 
-def sample_data(lims_sample):
+def sample_data(lims_sample, artifacts):
     """Parse out sample specific data."""
     capture_kit = lims_sample.udf.get('Capture Library version')
     try:
@@ -73,6 +77,25 @@ def sample_data(lims_sample):
         log.error("missing UDF key for samples: %s", lims_sample.id)
         click.echo(lims_sample.udf.items(), err=True)
         raise error
+
+    # parse artifacts
+    for artifact in artifacts:
+        if artifact.parent_process is None:
+            continue
+        elif artifact.parent_process.type.id == '33':
+            process = artifact.parent_process
+            data['capture_kit'] = process.udf['Capture Library version']
+            data['library_prep_method'] = process.udf['Method document and version no:']
+            data['library_prep_lotno'] = process.udf['Lot no: Capture library']
+        elif artifact.parent_process.type.id == '663':
+            # sequencing
+            method_no = artifact.parent_process.udf['Method']
+            method_version = artifact.parent_process.udf['Version']
+            data['sequencing_method'] = ":".join([method_no, method_version])
+            data['flowcell'] = artifact.parent_process.udf['Experiment Name']
+        elif artifact.parent_process.type.id == '670':
+            # more seq
+            data['sequencing_date'] = artifact.parent_process.udf['Finish Date']
 
     return data
 
