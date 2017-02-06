@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
 import copy
 import logging
 
@@ -70,8 +71,10 @@ def sample_data(lims_sample, artifacts):
             'delivery': lims_sample.udf['Data Analysis'],
             'sex': SEX_MAP.get(lims_sample.udf.get('Gender'), 'N/A'),
             'app_tag': lims_sample.udf['Sequencing Analysis'],
+            'app_tag_version': int(lims_sample.udf.get('Application Tag Version', '1')),
             'priority': lims_sample.udf.get('priority', 'standard'),
             'capture_kit': capture_kit if capture_kit != 'NA' else None,
+            'project': lims_sample.project.name,
         }
     except KeyError as error:
         log.error("missing UDF key for samples: %s", lims_sample.id)
@@ -95,7 +98,11 @@ def sample_data(lims_sample, artifacts):
             data['flowcell'] = artifact.parent_process.udf['Experiment Name']
         elif artifact.parent_process.type.id == '670':
             # more seq
-            data['sequencing_date'] = artifact.parent_process.udf['Finish Date']
+            if 'Finish Date' in artifact.parent_process.udf:
+                seq_date = artifact.parent_process.udf['Finish Date']
+                data['sequencing_date'] = datetime.combine(seq_date, datetime.min.time())
+            else:
+                log.warn("sequencing date not found in LIMS: %s", lims_sample.id)
 
     return data
 
