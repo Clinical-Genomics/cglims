@@ -9,8 +9,6 @@ COMBOS = {
     'DSD': ('DSD', 'HYP', 'SEXDIF', 'SEXDET'),
     'CM': ('CNM', 'CM'),
     'Horsel': ('Horsel', '141217', '141201'),
-    'NMD': ('HMSN', 'MM', 'OM', 'CMD', 'ACM', 'HP', 'OND', 'MS', 'HCM', 'NMD',
-            'MD', 'CM', 'IC', 'MND', 'NM', 'CMS', 'DM', 'CRD', 'HA'),
 }
 
 
