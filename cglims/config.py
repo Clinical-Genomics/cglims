@@ -114,7 +114,13 @@ def get_genepanels(lims_sample):
     except KeyError:
         message = "{}: 'Gene List'".format(lims_sample.id)
         raise MissingLimsDataException(message)
-    return genepanel_str.split(';')
+
+    gene_panels = set(genepanel_str.split(';'))
+    additional = lims_sample.udf.get('Additional Gene List')
+    if additional:
+        gene_panels.add(additional)
+
+    return list(gene_panels)
 
 
 def get_sampleid(lims_sample, key='Clinical Genomics ID'):
