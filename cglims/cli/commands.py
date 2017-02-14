@@ -194,7 +194,7 @@ def set_defaults(lims_sample):
     lims_sample.udf['Sample Buffer'] = 'NA'
     lims_sample.udf['Reference Genome Microbial'] = 'NA'
     if lims_sample.udf['Gender']:
-        lims_sample.udf['Gender'] = lims_sample.udf['Gender'].lower()
+        lims_sample.udf['Gender'] = lims_sample.udf['Gender'].upper()
     if lims_sample.udf['Status']:
         lims_sample.udf['Status'] = lims_sample.udf['Status'].lower()
 
