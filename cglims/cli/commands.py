@@ -105,6 +105,7 @@ def get(context, condense, project, external, identifier, field, all_samples):
     for sample in lims_samples:
         values = deepcopy(sample.udf._lookup)
         values['id'] = sample.id
+        values['sample_id'] = sample.udf.get('Clinical Genomics ID') or sample.id
         values['name'] = sample.name
         date_parts = map(int, sample.date_received.split('-'))
         values['date_received'] = datetime(*date_parts)
