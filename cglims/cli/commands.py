@@ -195,8 +195,11 @@ def set_defaults(lims_sample):
     lims_sample.udf['Sample Buffer'] = 'NA'
     lims_sample.udf['Reference Genome Microbial'] = 'NA'
     import ipdb; ipdb.set_trace()
-    if lims_sample.udf.get('Gender'):
-        lims_sample.udf['Gender'] = lims_sample.udf.get('Gender').upper()
+    gender = lims_sample.udf.get('Gender')
+    if gender:
+        lims_sample.udf['Gender'] = gender
+    else:
+        lims_sample.udf['Gender'] = 'unknown'
     if lims_sample.udf.get('Status'):
         lims_sample.udf['Status'] = lims_sample.udf.get('Status').lower()
 
