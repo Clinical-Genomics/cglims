@@ -90,6 +90,11 @@ def sample_data(lims_sample, artifacts):
             data['capture_kit'] = process.udf['Capture Library version']
             data['library_prep_method'] = process.udf['Method document and version no:']
             data['library_prep_lotno'] = process.udf['Lot no: Capture library']
+        elif artifact.parent_process.type.id == '667':
+            # PCR Free library prep
+            method_no = artifact.parent_process.udf['Method document']
+            method_version = artifact.parent_process.udf['Method document version']
+            data['library_prep_method'] = ":".join([method_no, method_version])
         elif artifact.parent_process.type.id == '663':
             # sequencing
             method_no = artifact.parent_process.udf['Method']
@@ -103,6 +108,13 @@ def sample_data(lims_sample, artifacts):
                 data['sequencing_date'] = datetime.combine(seq_date, datetime.min.time())
             else:
                 log.warn("sequencing date not found in LIMS: %s", lims_sample.id)
+        elif artifact.parent_process.type.id == '159':
+            # delivery
+            delivery_date = artifact.parent_process.udf['Date delivered']
+            data['delivery_date'] = datetime.combine(delivery_date, datetime.min.time())
+            method_no = artifact.parent_process.udf['Method Document']
+            method_version = artifact.parent_process.udf['Method Version']
+            data['delivery_method'] = ':'.join([method_no, method_version])
 
     return data
 
