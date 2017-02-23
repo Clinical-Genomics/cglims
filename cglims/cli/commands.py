@@ -50,7 +50,7 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
 @click.pass_context
 def config(context, gene_panel, family_id, samples, capture_kit, customer_or_case,
            family):
-    """Create pedigree from LIMS."""
+    """Create pedigree YAML file from LIMS data."""
     lims_api = api.connect(context.obj)
     gene_panels = [gene_panel] if gene_panel else None
     if customer_or_case:
@@ -233,3 +233,22 @@ def panels(context, customer, default_panels):
     """Convert between default panels and gene list panels."""
     for panel_id in convert_panels(customer, default_panels):
         click.echo(panel_id)
+
+
+@click.command()
+@click.option('-d', '--delivered', is_flag=True, help='check if sample is delivered')
+@click.argument('lims_id')
+@click.pass_context
+def sample(context, delivered, lims_id):
+    """Fetch information about a sample."""
+    lims_api = api.connect(context.obj)
+    if delivered:
+        filters = dict(samplelimsid=lims_id, type="Analyte",
+                       process_type="CG002 - Delivery")
+        delivery_analytes = lims_api.get_artifacts(**filters)
+        if delivery_analytes:
+            delivery_date = delivery_analytes[0].parent_process.udf['Date delivered']
+            click.echo(delivery_date)
+        else:
+            log.error("sample not yet delivered")
+            context.abort()
