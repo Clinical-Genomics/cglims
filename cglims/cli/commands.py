@@ -8,11 +8,11 @@ import yaml
 
 from cglims import api
 from cglims.api import ClinicalSample
-from cglims.config import make_config, CAPTUREKIT_MAP
+from cglims.config import make_config, CAPTUREKIT_MAP, relevant_samples
 from cglims.pedigree import make_pedigree
 from cglims.constants import SEX_MAP
 from cglims.panels import convert_panels
-from .utils import jsonify, fix_dump, ordered_reads, relevant_samples
+from .utils import jsonify, fix_dump, ordered_reads
 
 CAPTUREKITS = CAPTUREKIT_MAP.values()
 log = logging.getLogger(__name__)
@@ -25,16 +25,16 @@ log = logging.getLogger(__name__)
 @click.argument('customer_family', nargs=2, required=False)
 @click.pass_context
 def pedigree(context, gene_panel, family_id, samples, customer_family):
-    """Create pedigree from LIMS."""
-    lims = api.connect(context.obj)
+    """DEPRECATED: Create pedigree from LIMS."""
+    lims_api = api.connect(context.obj)
     if customer_family:
-        lims_samples = lims.case(*customer_family)
+        lims_samples = lims_api.case(*customer_family)
     elif samples:
-        lims_samples = [lims.sample(sample_id) for sample_id in samples]
+        lims_samples = [lims_api.sample(sample_id) for sample_id in samples]
     else:
         click.echo("you need to provide customer+family or samples")
         context.abort()
-    content = make_pedigree(lims, lims_samples, family_id=family_id,
+    content = make_pedigree(lims_api, lims_samples, family_id=family_id,
                             gene_panel=gene_panel)
     click.echo(content)
 
@@ -115,7 +115,7 @@ def get(context, condense, project, external, identifier, field, all_samples):
         values['expected_reads'] = int(values['reads'] * .75)
         values['project_id'] = sample.project.id
 
-        clinical_sample = ClinicalSample(sample) # upgrade!
+        clinical_sample = ClinicalSample(sample)  # upgrade!
         values['is_human'] = clinical_sample.apptag.is_human
         values['is_production'] = (False if values['customer'] == 'cust000'
                                    else True)
@@ -243,11 +243,8 @@ def sample(context, delivered, lims_id):
     """Fetch information about a sample."""
     lims_api = api.connect(context.obj)
     if delivered:
-        filters = dict(samplelimsid=lims_id, type="Analyte",
-                       process_type="CG002 - Delivery")
-        delivery_analytes = lims_api.get_artifacts(**filters)
-        if delivery_analytes:
-            delivery_date = delivery_analytes[0].parent_process.udf['Date delivered']
+        delivery_date = lims_api.is_delivered(lims_id)
+        if delivery_date:
             click.echo(delivery_date)
         else:
             log.error("sample not yet delivered")

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+DEPRECATED.
+"""
 import logging
 import io
 import copy
@@ -6,7 +9,7 @@ import csv
 
 from .config import get_capture_kit, CAPTUREKIT_MAP
 from .exc import MissingLimsDataException
-from .apptag import ApplicationTag, UnknownSequencingTypeError
+from .apptag import ApplicationTag
 
 
 PHENOTYPE_MAP = dict(affected='2', unaffected='1', unknown='0')

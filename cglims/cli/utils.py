@@ -56,11 +56,3 @@ def ordered_reads(app_tag):
         return number * READS_PER_1X
     else:
         raise ValueError("unknown read type id: {}".format(type_id))
-
-
-def relevant_samples(lims_samples):
-    """Filter out relevant samples for analysis."""
-    included = (lims_sample for lims_sample in lims_samples
-                if (lims_sample.udf.get('cancelled') != 'yes' and
-                    lims_sample.udf.get('tumor') != 'yes'))
-    return included

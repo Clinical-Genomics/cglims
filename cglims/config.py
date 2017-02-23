@@ -2,7 +2,7 @@
 import logging
 
 from .exc import MissingLimsDataException
-from .apptag import ApplicationTag, UnknownSequencingTypeError
+from .apptag import ApplicationTag
 from .panels import convert_panels
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
@@ -14,6 +14,27 @@ CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
 LATEST_CAPTUREKIT = 'Agilent_SureSelectCRE.V1'
 
 log = logging.getLogger(__name__)
+
+
+def relevant_samples(lims_samples):
+    """Filter out relevant samples for analysis."""
+    included = (lims_sample for lims_sample in lims_samples
+                if (lims_sample.udf.get('cancelled') != 'yes' and
+                    lims_sample.udf.get('tumor') != 'yes'))
+    return included
+
+
+def basic_config(lims_api, customer_id, family_id):
+    """Generate data for a basic config."""
+    lims_samples = lims_api.case(customer_id, family_id)
+    included_samples = relevant_samples(lims_samples)
+    data = make_config(lims_api, included_samples, family_id=family_id)
+    # handle single sample cases with 'unknown' phenotype
+    if len(data['samples']) == 1:
+        if data['samples'][0]['phenotype'] == 'unknown':
+            log.info("setting 'unknown' phenotype to 'unaffected'")
+            data['samples'][0]['phenotype'] = 'unaffected'
+    return data
 
 
 def gather_data(lims_sample):

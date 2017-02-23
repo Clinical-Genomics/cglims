@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+from dateutil.parser import parse as parse_date
 from genologics.entities import Sample
 from genologics.lims import Lims
 
 from cglims.apptag import ApplicationTag
+from cglims.constants import READS_PER_1X, SEX_MAP
 from cglims.exc import MultipleSamplesError
 
 
@@ -11,17 +13,17 @@ def connect(config):
     api = ClinicalLims(config['host'], config['username'], config['password'])
     return api
 
+
 class ClinicalSample:
 
-    def __init__(self, sample):
+    def __init__(self, lims_sample):
         """ Wrapper around the genologics Sample class
 
         Args:
-            sample (genologics.Sample): the sample instance to extend
+            lims_sample (genologics.Sample): the sample instance to extend
         """
-        self.lims = sample
+        self.lims = lims_sample
         self._apptag = ApplicationTag(self.lims.udf['Sequencing Analysis'])
-
 
     @property
     def apptag(self):
@@ -31,17 +33,67 @@ class ClinicalSample:
         """
         return self._apptag
 
-
     @property
     def pipeline(self):
         """ Determines in which pipeline the sample needs to be run.
 
         Returns (str): 'mip' or 'mwgs'
         """
-        if self.lims.get('tissue_type') != 'tumour':
+        if self.lims.udf.get('tissue_type') != 'tumour':
             return 'mip' if self.apptag.is_human else 'mwgs'
 
         return None
+
+    @property
+    def sex(self):
+        """Return human readable form of sex (Gender)."""
+        return SEX_MAP.get(self.udf('Gender'), None)
+
+    @property
+    def ordered_reads(self):
+        """Calculate ordered number of reads."""
+        app_tag = self.udf['Sequencing Analysis']
+        type_id = app_tag[-4]
+        number = int(app_tag[-3:])
+        if type_id == 'R':
+            return number * 1000000
+        elif type_id == 'K':
+            return number * 1000
+        elif type_id == 'C':
+            # expect WGS
+            return number * READS_PER_1X
+        else:
+            raise ValueError("unknown read type id: {}".format(type_id))
+
+    def udf(self, udf_key, default=None):
+        """Get a sample UDF."""
+        return self.lims.udf.get(udf_key, default)
+
+    def to_dict(self):
+        """Export data from the sample object."""
+        if self.udf('customer') and self.udf('familyID'):
+            case_id = '-'.join([self.udf('customer'), self.udf('familyID')])
+        else:
+            case_id = None
+
+        data = {
+            'id': self.lims.id,
+            # general sample id if imported from old TSL
+            'sample_id': self.lims.udf.get('Clinical Genomics ID') or self.lims.id,
+            'name': self.lims.name,
+            'date_received': parse_date(self.lims.date_received),
+            'project_name': self.lims.project.name,
+            'sex': self.sex,
+            'reads': self.ordered_reads,
+            'expected_reads': int(self.ordered_reads * .75),
+            'project_id': self.lims.project.id,
+            'is_human': self.apptag.is_human,
+            'pipeline': self.pipeline,
+            'case_id': case_id,
+            'panels': (self.udf('Gene List').split(';') if
+                       self.udf('Gene List') else None),
+        }
+        return data
 
 
 class ClinicalLims(Lims):
@@ -69,6 +121,16 @@ class ClinicalLims(Lims):
             lims_sample = Sample(self, id=lims_id)
 
         return lims_sample
+
+    def is_delivered(self, lims_id):
+        """Check if a sample has been delivered."""
+        filters = dict(samplelimsid=lims_id, type="Analyte",
+                       process_type="CG002 - Delivery")
+        delivery_analytes = self.get_artifacts(**filters)
+        if delivery_analytes:
+            return delivery_analytes[0].parent_process.udf['Date delivered']
+        else:
+            return None
 
 
 def deliver(lims_sample):
