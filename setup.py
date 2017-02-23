@@ -79,6 +79,7 @@ setup(
             'pedigree = cglims.cli.commands:pedigree',
             'check = cglims.check:check',
             'samples = cglims.check:samples',
+            'sample = cglims.cli.commands:sample',
         ],
     },
 )
