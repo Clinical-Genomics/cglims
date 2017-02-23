@@ -115,10 +115,10 @@ def get_genepanels(lims_sample):
         message = "{}: 'Gene List'".format(lims_sample.id)
         raise MissingLimsDataException(message)
 
-    gene_panels = set(genepanel_str.split(';'))
+    gene_panels = set(gene_panel.strip() for gene_panel in genepanel_str.split(';'))
     additional = lims_sample.udf.get('Additional Gene List')
     if additional:
-        gene_panels.add(additional)
+        gene_panels.add(additional.strip())
 
     return list(gene_panels)
 
