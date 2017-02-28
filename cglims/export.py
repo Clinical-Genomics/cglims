@@ -75,6 +75,7 @@ def sample_data(lims_sample, artifacts):
             'priority': lims_sample.udf.get('priority', 'standard'),
             'capture_kit': capture_kit if capture_kit != 'NA' else None,
             'project': lims_sample.project.name,
+            'source': lims_sample.udf['Source'],
         }
     except KeyError as error:
         log.error("missing UDF key for samples: %s", lims_sample.id)
