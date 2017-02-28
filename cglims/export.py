@@ -96,18 +96,16 @@ def sample_data(lims_sample, artifacts):
             method_version = artifact.parent_process.udf['Method document version']
             data['library_prep_method'] = ":".join([method_no, method_version])
         elif artifact.parent_process.type.id == '663':
-            # sequencing
+            # sequencing (cluster generation...)
             method_no = artifact.parent_process.udf['Method']
             method_version = artifact.parent_process.udf['Version']
             data['sequencing_method'] = ":".join([method_no, method_version])
             data['flowcell'] = artifact.parent_process.udf['Experiment Name']
         elif artifact.parent_process.type.id == '670':
-            # more seq
-            if 'Finish Date' in artifact.parent_process.udf:
-                seq_date = artifact.parent_process.udf['Finish Date']
-                data['sequencing_date'] = datetime.combine(seq_date, datetime.min.time())
-            else:
-                log.warn("sequencing date not found in LIMS: %s", lims_sample.id)
+            # more seq (actual sequencing process)
+            if 'sequencing_date' not in data:
+                # get the start date for sequenceing
+                data['sequencing_date'] = parse_date(artifact.parent_process.date_run)
         elif artifact.parent_process.type.id == '159':
             # delivery
             delivery_date = artifact.parent_process.udf['Date delivered']
