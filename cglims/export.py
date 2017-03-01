@@ -83,7 +83,6 @@ def sample_data(lims_sample, artifacts):
         raise error
 
     # parse artifacts
-    import ipdb; ipdb.set_trace()
     for artifact in artifacts:
         if artifact.parent_process is None:
             continue
