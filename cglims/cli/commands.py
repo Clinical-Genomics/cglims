@@ -45,11 +45,12 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
 @click.option('-s', '--samples', multiple=True, help='included samples')
 @click.option('-c', '--capture-kit', type=click.Choice(CAPTUREKITS),
               help='custom capture kit')
+@click.option('--force', is_flag=True, help='skip sanity checks')
 @click.argument('customer_or_case')
 @click.argument('family', required=False)
 @click.pass_context
-def config(context, gene_panel, family_id, samples, capture_kit, customer_or_case,
-           family):
+def config(context, gene_panel, family_id, samples, capture_kit, force,
+           customer_or_case, family):
     """Create pedigree YAML file from LIMS data."""
     lims_api = api.connect(context.obj)
     gene_panels = [gene_panel] if gene_panel else None
@@ -64,7 +65,7 @@ def config(context, gene_panel, family_id, samples, capture_kit, customer_or_cas
 
     included_samples = relevant_samples(lims_samples)
     data = make_config(lims_api, included_samples, family_id=family_id,
-                       gene_panels=gene_panels, capture_kit=capture_kit)
+                       gene_panels=gene_panels, capture_kit=capture_kit, force=force)
     # handle single sample cases with 'unknown' phenotype
     if len(data['samples']) == 1:
         if data['samples'][0]['phenotype'] == 'unknown':

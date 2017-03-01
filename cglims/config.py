@@ -72,7 +72,7 @@ def expected_coverage(app_tag):
 
 
 def make_config(lims_api, lims_samples, customer=None, family_id=None,
-                gene_panels=None, capture_kit=None):
+                gene_panels=None, capture_kit=None, force=False):
     """Make the config for all samples."""
     samples_data = []
     customers = set()
@@ -100,7 +100,9 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
 
         samples_data.append(data)
 
-    samples_data = internalize_ids(samples_data)
+    samples_data = list(internalize_ids(samples_data))
+    if not force:
+        check_relations(samples_data)
 
     if customer is None:
         assert len(customers) == 1, "conflicting custs: {}".format(customers)
@@ -115,7 +117,7 @@ def make_config(lims_api, lims_samples, customer=None, family_id=None,
         'family': family_id,
         'default_gene_panels': gene_panels,
         'gene_panels': convert_panels(customer, gene_panels),
-        'samples': list(samples_data),
+        'samples': samples_data,
     }
     return case_data
 
@@ -189,3 +191,22 @@ def internalize_ids(samples):
             if parent_id and parent_id != '0':
                 sample_data[parent_field] = sample_map[parent_id]['sample_id']
         yield sample_data
+
+
+def check_relations(samples):
+    """Check parental relations between samples."""
+    sexes = {sample['sample_id']: sample['sex'] for sample in samples}
+    for sample in samples:
+        if sample['father'] != 0:
+            if sample['father'] not in sexes:
+                raise ValueError("father not referenced: %s", sample['father'])
+            elif sexes[sample['father']] != 'male':
+                sex = sexes[sample['father']]
+                raise ValueError("father sex incorrect: %s, %s", sample['father'], sex)
+
+        if sample['mother'] != 0:
+            if sample['mother'] not in sexes:
+                raise ValueError("mother not referenced: %s", sample['mother'])
+            elif sexes[sample['mother']] != 'female':
+                sex = sexes[sample['mother']]
+                raise ValueError("mother sex incorrect: %s, %s", sample['mother'], sex)
