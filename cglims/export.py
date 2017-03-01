@@ -83,6 +83,7 @@ def sample_data(lims_sample, artifacts):
         raise error
 
     # parse artifacts
+    import ipdb; ipdb.set_trace()
     for artifact in artifacts:
         if artifact.parent_process is None:
             continue
@@ -102,8 +103,9 @@ def sample_data(lims_sample, artifacts):
             method_version = artifact.parent_process.udf['Version']
             data['sequencing_method'] = ":".join([method_no, method_version])
             data['flowcell'] = artifact.parent_process.udf['Experiment Name']
-        elif artifact.parent_process.type.id == '670':
+        elif artifact.parent_process.type.id in ('670', '671'):
             # more seq (actual sequencing process)
+            # or for EX: CG002 - Illumina Sequencing (Illumina SBS)
             if 'sequencing_date' not in data:
                 # get the start date for sequenceing
                 data['sequencing_date'] = parse_date(artifact.parent_process.date_run)
@@ -114,6 +116,22 @@ def sample_data(lims_sample, artifacts):
             method_no = artifact.parent_process.udf['Method Document']
             method_version = artifact.parent_process.udf['Method Version']
             data['delivery_method'] = ':'.join([method_no, method_version])
+        elif artifact.parent_process.type.id == '669':
+            # CG002 - Hybridize Library  (SS XT)
+            process = artifact.parent_process
+            capture_kit_udf = 'SureSelect capture library/libraries used'
+            data['capture_kit'] = process.udf[capture_kit_udf]
+            method_no = process.udf['Method document']
+            method_version = artifact.parent_process.udf['Method document versio']
+            data['library_prep_method'] = ":".join([method_no, method_version])
+        elif artifact.parent_process.type.id == '664':
+            # CG002 - Cluster Generation (Illumina SBS)
+            method_no = artifact.parent_process.udf['Method Document 1']
+            method_version = artifact.parent_process.udf['Document 1 Version']
+            data['sequencing_method'] = ":".join([method_no, method_version])
+            raw_flowcell = artifact.parent_process.udf['Experiment Name']
+            data['flowcell'] = raw_flowcell.split(' ')[0]
+        elif artifact.parent_process.type.id == '671':
 
     return data
 
