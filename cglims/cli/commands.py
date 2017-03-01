@@ -81,11 +81,16 @@ def config(context, gene_panel, family_id, samples, capture_kit, force,
 @click.option('-n', '--external', is_flag=True, help='identifier is the customer sample name')
 @click.option('--all', '--all-samples', is_flag=True,
               help='include cancelled/tumor samples')
-@click.argument('identifier')
+@click.argument('raw_identifier')
 @click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, external, identifier, field, all_samples):
+def get(context, condense, project, external, raw_identifier, field, all_samples):
     """Get information from LIMS: either sample or family samples."""
+    if '--' in raw_identifier:
+        identifier, ext = raw_identifier.split('--', 1)
+    else:
+        identifier, ext = raw_identifier, None
+
     lims = api.connect(context.obj)
     if project:
         lims_samples = lims.get_samples(projectlimsid=identifier)
@@ -106,7 +111,9 @@ def get(context, condense, project, external, identifier, field, all_samples):
     for sample in lims_samples:
         values = deepcopy(sample.udf._lookup)
         values['id'] = sample.id
-        values['sample_id'] = sample.udf.get('Clinical Genomics ID') or sample.id
+        raw_sample_id = sample.udf.get('Clinical Genomics ID') or sample.id
+        sample_id = "{}--{}".format(raw_sample_id, ext) if ext else raw_sample_id
+        values['sample_id'] = sample_id
         values['name'] = sample.name
         date_parts = map(int, sample.date_received.split('-'))
         values['date_received'] = datetime(*date_parts)
@@ -123,8 +130,9 @@ def get(context, condense, project, external, identifier, field, all_samples):
         values['pipeline'] = clinical_sample.pipeline
 
         if 'customer' in values and 'familyID' in values:
-            values['case_id'] = "{}-{}".format(values['customer'],
-                                               values['familyID'])
+            raw_case_id = '-'.join([values['customer'], values['familyID']])
+            case_id = "{}--{}".format(raw_case_id, ext) if ext else raw_case_id
+            values['case_id'] = case_id
 
         if 'customer' in values and 'Gene List' in values:
             default_panels = values['Gene List'].split(';')
