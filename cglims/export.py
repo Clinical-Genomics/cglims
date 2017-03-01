@@ -131,7 +131,6 @@ def sample_data(lims_sample, artifacts):
             data['sequencing_method'] = ":".join([method_no, method_version])
             raw_flowcell = artifact.parent_process.udf['Experiment Name']
             data['flowcell'] = raw_flowcell.split(' ')[0]
-        elif artifact.parent_process.type.id == '671':
 
     return data
 
