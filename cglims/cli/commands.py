@@ -46,7 +46,7 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
 @click.option('-c', '--capture-kit', type=click.Choice(CAPTUREKITS),
               help='custom capture kit')
 @click.option('--force', is_flag=True, help='skip sanity checks')
-@click.argument('customer_or_case')
+@click.argument('raw_case_id')
 @click.pass_context
 def config(context, gene_panel, family_id, samples, capture_kit, force,
            raw_case_id):
