@@ -51,7 +51,7 @@ def check(context, update, version, force, source, lims_id):
                         lims.get_samples(projectlimsid=lims_id))
 
     for sample in lims_samples:
-        check_sample(sample['sample'], lims_artifact=sample.get('artifact'),
+        check_sample(lims, sample['sample'], lims_artifact=sample.get('artifact'),
                      update=update, version=version, force=force)
 
 
