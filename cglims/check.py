@@ -12,17 +12,21 @@ log = logging.getLogger(__name__)
 
 
 @click.command()
-@click.option('-p', '--project', help='LIMS project id')
-@click.option('-l', '--limit', default=20, help='number of samples to fetch')
+@click.option('-s', '--source',
+              type=click.Choice(['project', 'process']), default='project')
+@click.argument('lims_id')
 @click.pass_context
-def samples(context, project, limit):
+def samples(context, source, apptags, lims_id):
     """Fetch projects from the database."""
     lims = api.connect(context.obj)
-    samples = lims.get_samples(projectlimsid=project)
-    if project is None:
-        samples = samples[:limit]
-    for sample in samples:
-        click.echo(sample.id)
+    if source == 'process':
+        lims_process = Process(lims, id=lims_id)
+        lims_samples = process_samples(lims_process)
+    elif source == 'project':
+        lims_samples = ({'sample': sample} for sample in
+                        lims.get_samples(projectlimsid=lims_id))
+    for lims_sample in lims_samples:
+        click.echo(lims_sample.id)
 
 
 @click.command()
@@ -47,35 +51,41 @@ def check(context, update, version, force, source, lims_id):
                         lims.get_samples(projectlimsid=lims_id))
 
     for sample in lims_samples:
-        lims_sample = sample['sample']
-        results = []
-        log.info("checking sample: %s (%s)", lims_sample.id, lims_sample.name)
-        log.debug('checking sample name...')
-        results.append(check_samplename(lims_sample))
-        log.debug('checking duplicate external sample name...')
-        results.append(check_duplicatename(lims, lims_sample))
-        log.debug('checking capture kit (extenal sequencing)...')
-        results.append(check_capturekit(lims_sample))
-        log.debug('checking family members...')
-        results.append(check_familymembers(lims, lims_sample))
+        check_sample(sample['sample'], lims_artifact=sample.get('artifact'),
+                     update=update, version=version, force=force)
 
-        if update:
-            log.debug('updating missing reads...')
-            set_missingreads(lims_sample, force=force)
-            log.debug('checking if update to trio tag is possible...')
-            set_trioapptag(lims, lims_sample)
-            if version:
-                log.debug('updating application tag version...')
-                set_apptagversion(lims_sample, version, force=force)
 
-            if 'artifact' in sample:
-                if False in results:
-                    log.warn("sample check FAILED: %s", lims_sample.id)
-                    sample['artifact'].qc_flag = 'FAILED'
-                else:
-                    log.info("sample check PASSED: %s", lims_sample.id)
-                    sample['artifact'].qc_flag = 'PASSED'
-                sample['artifact'].put()
+def check_sample(lims, lims_sample, lims_artifact=None, update=False, version=None,
+                 force=False):
+    """Check a LIMS sample and optionally update some UDFs."""
+    results = []
+    log.info("checking sample: %s (%s)", lims_sample.id, lims_sample.name)
+    log.debug('checking sample name...')
+    results.append(check_samplename(lims_sample))
+    log.debug('checking duplicate external sample name...')
+    results.append(check_duplicatename(lims, lims_sample))
+    log.debug('checking capture kit (extenal sequencing)...')
+    results.append(check_capturekit(lims_sample))
+    log.debug('checking family members...')
+    results.append(check_familymembers(lims, lims_sample))
+
+    if update:
+        log.debug('updating missing reads...')
+        set_missingreads(lims_sample, force=force)
+        log.debug('checking if update to trio tag is possible...')
+        set_trioapptag(lims, lims_sample)
+        if version:
+            log.debug('updating application tag version...')
+            set_apptagversion(lims_sample, version, force=force)
+
+        if lims_artifact:
+            if False in results:
+                log.warn("sample check FAILED: %s", lims_sample.id)
+                lims_artifact.qc_flag = 'FAILED'
+            else:
+                log.info("sample check PASSED: %s", lims_sample.id)
+                lims_artifact.qc_flag = 'PASSED'
+            lims_artifact.put()
 
 
 def set_missingreads(lims_sample, force=False):
