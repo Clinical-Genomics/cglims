@@ -47,30 +47,40 @@ def pedigree(context, gene_panel, family_id, samples, customer_family):
               help='custom capture kit')
 @click.option('--force', is_flag=True, help='skip sanity checks')
 @click.argument('customer_or_case')
-@click.argument('family', required=False)
 @click.pass_context
 def config(context, gene_panel, family_id, samples, capture_kit, force,
-           customer_or_case, family):
+           raw_case_id):
     """Create pedigree YAML file from LIMS data."""
+    if '--' in raw_case_id:
+        case_id, ext = raw_case_id.split('--', 1)
+    else:
+        case_id, ext = raw_case_id, None
+    customer, family = case_id.split('-', 1)
+
     lims_api = api.connect(context.obj)
     gene_panels = [gene_panel] if gene_panel else None
-    if customer_or_case:
-        if family is None:
-            customer, family = customer_or_case.split('-', 1)
-        else:
-            customer = customer_or_case
-        lims_samples = lims_api.case(customer, family)
-    elif samples:
+
+    if samples:
         lims_samples = [lims_api.sample(sample_id) for sample_id in samples]
+    else:
+        lims_samples = lims_api.case(customer, family)
 
     included_samples = relevant_samples(lims_samples)
     data = make_config(lims_api, included_samples, family_id=family_id,
                        gene_panels=gene_panels, capture_kit=capture_kit, force=force)
+
+    if ext:
+        # handle cases with e.g. downsampled data
+        data['family'] = '--'.join(data['family'], ext)
+        for sample in data['samples']:
+            sample['sample_id'] = '--'.join(sample['sample_id'], ext)
+
     # handle single sample cases with 'unknown' phenotype
     if len(data['samples']) == 1:
         if data['samples'][0]['phenotype'] == 'unknown':
             log.info("setting 'unknown' phenotype to 'unaffected'")
             data['samples'][0]['phenotype'] = 'unaffected'
+
     dump = yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
     click.echo(fix_dump(dump))
 
