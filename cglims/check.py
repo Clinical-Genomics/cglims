@@ -79,13 +79,16 @@ def check_sample(lims, lims_sample, lims_artifact=None, update=False, version=No
             set_apptagversion(lims_sample, version, force=force)
 
         if lims_artifact:
-            if False in results:
-                log.warn("sample check FAILED: %s", lims_sample.id)
-                lims_artifact.qc_flag = 'FAILED'
+            if lims_artifact.qc_flag:
+                log.warn("qc flag already set: %s", lims_artifact.qc_flag)
             else:
-                log.info("sample check PASSED: %s", lims_sample.id)
-                lims_artifact.qc_flag = 'PASSED'
-            lims_artifact.put()
+                if False in results:
+                    log.warn("sample check FAILED: %s", lims_sample.id)
+                    lims_artifact.qc_flag = 'FAILED'
+                else:
+                    log.info("sample check PASSED: %s", lims_sample.id)
+                    lims_artifact.qc_flag = 'PASSED'
+                lims_artifact.put()
 
 
 def set_missingreads(lims_sample, force=False):
