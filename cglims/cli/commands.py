@@ -194,7 +194,6 @@ def set_defaults(lims_sample):
     lims_sample.udf['Index number'] = 'NA'
     lims_sample.udf['Sample Buffer'] = 'NA'
     lims_sample.udf['Reference Genome Microbial'] = 'NA'
-    import ipdb; ipdb.set_trace()
     gender = lims_sample.udf.get('Gender')
     if gender:
         lims_sample.udf['Gender'] = gender
