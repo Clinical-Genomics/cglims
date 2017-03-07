@@ -71,9 +71,9 @@ def config(context, gene_panel, family_id, samples, capture_kit, force,
 
     if ext:
         # handle cases with e.g. downsampled data
-        data['family'] = '--'.join(data['family'], ext)
+        data['family'] = '--'.join([data['family'], ext])
         for sample in data['samples']:
-            sample['sample_id'] = '--'.join(sample['sample_id'], ext)
+            sample['sample_id'] = '--'.join([sample['sample_id'], ext])
 
     # handle single sample cases with 'unknown' phenotype
     if len(data['samples']) == 1:
