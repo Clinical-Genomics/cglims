@@ -44,12 +44,11 @@ def build_cli(title):
                   help='path to config file')
     @click.option('-d', '--database', help='path/URI of the SQL database')
     @click.option('-l', '--log-level', default='INFO')
-    @click.option('--log-file', type=click.Path())
     @click.version_option(version, prog_name=title)
     @click.pass_context
-    def root(context, config, database, log_level, log_file):
+    def root(context, config, database, log_level):
         """Interact with CLI."""
-        init_log(logging.getLogger(), loglevel=log_level, filename=log_file)
+        init_log(logging.getLogger(), loglevel=log_level)
         log.debug("{}: version {}".format(title, version))
 
         # read in config file if it exists
