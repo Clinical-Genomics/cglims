@@ -81,14 +81,14 @@ def check_sample(lims, lims_sample, lims_artifact=None, update=False, version=No
         if lims_artifact:
             if lims_artifact.qc_flag:
                 log.warn("qc flag already set: %s", lims_artifact.qc_flag)
+
+            if False in results:
+                log.warn("sample check FAILED: %s", lims_sample.id)
+                lims_artifact.qc_flag = 'FAILED'
             else:
-                if False in results:
-                    log.warn("sample check FAILED: %s", lims_sample.id)
-                    lims_artifact.qc_flag = 'FAILED'
-                else:
-                    log.info("sample check PASSED: %s", lims_sample.id)
-                    lims_artifact.qc_flag = 'PASSED'
-                lims_artifact.put()
+                log.info("sample check PASSED: %s", lims_sample.id)
+                lims_artifact.qc_flag = 'PASSED'
+            lims_artifact.put()
 
 
 def set_missingreads(lims_sample, force=False):
