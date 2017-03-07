@@ -2,6 +2,7 @@
 import logging
 
 import click
+from genologics.entities import Process
 
 from cglims import api
 from cglims.apptag import ApplicationTag
@@ -39,7 +40,8 @@ def check(context, update, version, force, source, lims_id):
     if source == 'sample':
         lims_samples = [{'sample': lims.sample(lims_id)}]
     elif source == 'process':
-        lims_samples = process_samples(lims_id)
+        lims_process = Process(lims, id=lims_id)
+        lims_samples = process_samples(lims_process)
     elif source == 'project':
         lims_samples = ({'sample': sample} for sample in
                         lims.get_samples(projectlimsid=lims_id))
@@ -74,7 +76,6 @@ def check(context, update, version, force, source, lims_id):
                     log.info("sample check PASSED: %s", lims_sample.id)
                     sample['artifact'].qc_flag = 'PASSED'
                 sample['artifact'].put()
-
 
 
 def set_missingreads(lims_sample, force=False):
