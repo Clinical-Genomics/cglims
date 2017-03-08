@@ -39,8 +39,12 @@ class ClinicalSample:
 
         Returns (str): 'mip' or 'mwgs'
         """
-        if self.lims.udf.get('tissue_type') != 'tumour':
-            return 'mip' if self.apptag.is_human else 'mwgs'
+        if self.lims.get('tissue_type') != 'tumour':
+            if self.apptag.is_human:
+                return 'mip'
+
+        if self.apptag.is_microbial:
+            return 'mwgs'
 
         return None
 
