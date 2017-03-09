@@ -213,17 +213,20 @@ def set_defaults(lims_sample):
     lims_sample.udf['Index number'] = 'NA'
     lims_sample.udf['Sample Buffer'] = 'NA'
     lims_sample.udf['Reference Genome Microbial'] = 'NA'
-    if lims_sample.udf['Gender']:
-        lims_sample.udf['Gender'] = lims_sample.udf['Gender'].upper()
-    if lims_sample.udf['Status']:
-        lims_sample.udf['Status'] = lims_sample.udf['Status'].lower()
+    gender = lims_sample.udf.get('Gender')
+    if gender:
+        lims_sample.udf['Gender'] = gender.upper()
+    else:
+        lims_sample.udf['Gender'] = 'unknown'
+    if lims_sample.udf.get('Status'):
+        lims_sample.udf['Status'] = lims_sample.udf.get('Status').lower()
 
-    if lims_sample.udf['Source'] == 'Blod':
+    if lims_sample.udf.get('Source') == 'Blod':
         log.info("updating 'Source': 'Blod' => 'blood'")
         lims_sample.udf['Source'] = 'blood'
 
     if 'priority' in lims_sample.udf:
-        if lims_sample.udf['priority'] == 'prioriterad':
+        if lims_sample.udf.get('priority') == 'prioriterad':
             log.info("updating 'priority': 'prioriterad' => 'priority'")
             lims_sample.udf['priority'] = 'priority'
         else:
