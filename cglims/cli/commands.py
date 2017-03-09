@@ -137,7 +137,8 @@ def get(context, condense, project, external, raw_identifier, field, all_samples
         values['is_human'] = clinical_sample.apptag.is_human
         values['is_production'] = (False if values['customer'] == 'cust000'
                                    else True)
-        values['pipeline'] = clinical_sample.pipeline
+        pipeline = clinical_sample.pipeline
+        values['pipeline'] = pipeline if pipeline else 'NA'
 
         if 'customer' in values and 'familyID' in values:
             raw_case_id = '-'.join([values['customer'], values['familyID']])
