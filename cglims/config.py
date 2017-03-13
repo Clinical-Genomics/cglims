@@ -63,10 +63,10 @@ def expected_coverage(app_tag):
     """Parse out the expected coverage from the app tag."""
     read_part = app_tag[-4:]
     if read_part.startswith('C'):
-        return int(read_part[1:])
+        return int(read_part[1:]) * 0.87
     elif read_part.startswith('R'):
         # target reads expressed in millions
-        return int(read_part[1:]) * 1.5
+        return int(read_part[1:]) * 1.5 * 0.87
     else:
         raise ValueError("unexpected app tag: %s", app_tag)
 
