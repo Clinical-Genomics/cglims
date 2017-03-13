@@ -135,6 +135,8 @@ def get(context, condense, project, external, raw_identifier, field, all_samples
 
         clinical_sample = ClinicalSample(sample)  # upgrade!
         values['is_human'] = clinical_sample.apptag.is_human
+        values['sequencing_type'] = clinical_sample.apptag.sequencing_type
+        values['is_external'] = clinical_sample.apptag.is_external
         values['is_production'] = (False if values['customer'] == 'cust000'
                                    else True)
         pipeline = clinical_sample.pipeline
