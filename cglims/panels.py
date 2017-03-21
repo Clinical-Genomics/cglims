@@ -2,8 +2,8 @@
 """Handle gene panels."""
 
 COLLABORATORS = ('cust000', 'cust002', 'cust003', 'cust004')
-MASTER_LIST = ('ENDO', 'EP', 'IEM', 'IBMFS', 'mtDNA', 'MIT', 'OMIM', 'PIDCAD',
-               'PID', 'SKD')
+MASTER_LIST = ('ENDO', 'EP', 'IEM', 'IBMFS', 'mtDNA', 'MIT', 'OMIM-AUTO',
+               'PIDCAD', 'PID', 'SKD')
 COMBOS = {
     'ATX': ('ATX', 'SPG', 'Ataxi', 'AD-HSP'),
     'DSD': ('DSD', 'HYP', 'SEXDIF', 'SEXDET'),
@@ -30,6 +30,6 @@ def convert_panels(customer, default_panels):
 
     if customer == 'cust002':
         # add OMIM to every panel choice
-        all_panels.add('OMIM')
+        all_panels.add('OMIM-AUTO')
 
     return list(all_panels)
