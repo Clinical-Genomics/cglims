@@ -89,12 +89,14 @@ def config(context, gene_panel, family_id, samples, capture_kit, force,
 @click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.option('-p', '--project', is_flag=True, help='identifier is a project')
 @click.option('-n', '--external', is_flag=True, help='identifier is the customer sample name')
+@click.option('-m', '--minimal', is_flag=True, help='output minimal information')
 @click.option('--all', '--all-samples', is_flag=True,
               help='include cancelled/tumor samples')
 @click.argument('raw_identifier')
 @click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, external, raw_identifier, field, all_samples):
+def get(context, condense, project, external, minimal, raw_identifier, field,
+        all_samples):
     """Get information from LIMS: either sample or family samples."""
     if '--' in raw_identifier:
         identifier, ext = raw_identifier.split('--', 1)
@@ -121,35 +123,37 @@ def get(context, condense, project, external, raw_identifier, field, all_samples
     for sample in lims_samples:
         values = deepcopy(sample.udf._lookup)
         values['id'] = sample.id
-        raw_sample_id = sample.udf.get('Clinical Genomics ID') or sample.id
-        sample_id = "{}--{}".format(raw_sample_id, ext) if ext else raw_sample_id
-        values['sample_id'] = sample_id
-        values['name'] = sample.name
-        date_parts = map(int, sample.date_received.split('-'))
-        values['date_received'] = datetime(*date_parts)
-        values['project_name'] = sample.project.name
-        values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
-        values['reads'] = ordered_reads(values['Sequencing Analysis'])
-        values['expected_reads'] = int(values['reads'] * .75)
-        values['project_id'] = sample.project.id
 
-        clinical_sample = ClinicalSample(sample)  # upgrade!
-        values['is_human'] = clinical_sample.apptag.is_human
-        values['sequencing_type'] = clinical_sample.apptag.sequencing_type
-        values['is_external'] = clinical_sample.apptag.is_external
-        values['is_production'] = (False if values['customer'] == 'cust000'
-                                   else True)
-        pipeline = clinical_sample.pipeline
-        values['pipeline'] = pipeline if pipeline else 'NA'
+        if not minimal:
+            raw_sample_id = sample.udf.get('Clinical Genomics ID') or sample.id
+            sample_id = "{}--{}".format(raw_sample_id, ext) if ext else raw_sample_id
+            values['sample_id'] = sample_id
+            values['name'] = sample.name
+            date_parts = map(int, sample.date_received.split('-'))
+            values['date_received'] = datetime(*date_parts)
+            values['project_name'] = sample.project.name
+            values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
+            values['reads'] = ordered_reads(values['Sequencing Analysis'])
+            values['expected_reads'] = int(values['reads'] * .75)
+            values['project_id'] = sample.project.id
 
-        if 'customer' in values and 'familyID' in values:
-            raw_case_id = '-'.join([values['customer'], values['familyID']])
-            case_id = "{}--{}".format(raw_case_id, ext) if ext else raw_case_id
-            values['case_id'] = case_id
+            clinical_sample = ClinicalSample(sample)  # upgrade!
+            values['is_human'] = clinical_sample.apptag.is_human
+            values['sequencing_type'] = clinical_sample.apptag.sequencing_type
+            values['is_external'] = clinical_sample.apptag.is_external
+            values['is_production'] = (False if values['customer'] == 'cust000'
+                                       else True)
+            pipeline = clinical_sample.pipeline
+            values['pipeline'] = pipeline if pipeline else 'NA'
 
-        if 'customer' in values and 'Gene List' in values:
-            default_panels = values['Gene List'].split(';')
-            values['panels'] = default_panels
+            if 'customer' in values and 'familyID' in values:
+                raw_case_id = '-'.join([values['customer'], values['familyID']])
+                case_id = "{}--{}".format(raw_case_id, ext) if ext else raw_case_id
+                values['case_id'] = case_id
+
+            if 'customer' in values and 'Gene List' in values:
+                default_panels = values['Gene List'].split(';')
+                values['panels'] = default_panels
 
         if field:
             if field not in values:
