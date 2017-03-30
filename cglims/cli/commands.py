@@ -123,12 +123,12 @@ def get(context, condense, project, external, minimal, raw_identifier, field,
     for sample in lims_samples:
         values = deepcopy(sample.udf._lookup)
         values['id'] = sample.id
+        values['name'] = sample.name
+        raw_sample_id = sample.udf.get('Clinical Genomics ID') or sample.id
+        sample_id = "{}--{}".format(raw_sample_id, ext) if ext else raw_sample_id
+        values['sample_id'] = sample_id
 
         if not minimal:
-            raw_sample_id = sample.udf.get('Clinical Genomics ID') or sample.id
-            sample_id = "{}--{}".format(raw_sample_id, ext) if ext else raw_sample_id
-            values['sample_id'] = sample_id
-            values['name'] = sample.name
             date_parts = map(int, sample.date_received.split('-'))
             values['date_received'] = datetime(*date_parts)
             values['project_name'] = sample.project.name

@@ -55,7 +55,7 @@ class ClinicalSample:
     @property
     def ordered_reads(self):
         """Calculate ordered number of reads."""
-        app_tag = self.udf['Sequencing Analysis']
+        app_tag = self.udf('Sequencing Analysis')
         type_id = app_tag[-4]
         number = int(app_tag[-3:])
         if type_id == 'R':
@@ -82,7 +82,7 @@ class ClinicalSample:
         data = {
             'id': self.lims.id,
             # general sample id if imported from old TSL
-            'sample_id': self.lims.udf.get('Clinical Genomics ID') or self.lims.id,
+            'sample_id': self.udf('Clinical Genomics ID') or self.lims.id,
             'name': self.lims.name,
             'date_received': parse_date(self.lims.date_received),
             'project_name': self.lims.project.name,
