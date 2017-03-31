@@ -42,7 +42,7 @@ class ClinicalSample:
         if self.lims.udf.get('tissue_type') != 'tumour':
             if self.apptag.is_human:
                 return 'mip'
-        elif self.apptag.is_microbial:
+        if self.apptag.is_microbial:
             return 'mwgs'
 
         return None
