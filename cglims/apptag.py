@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from cglims.constants import READS_PER_1X
 
-PANELS = ('EXO', 'EXT', 'MHP', 'EFT', 'CCP')
+PANELS = ('EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX')
 HISEQX = ('WGS', 'WGT', 'WGL', 'MWX')
 ANALYSIS_ONLY = ('EXX', 'WGX')
 MICROBIAL = ('MWX', 'MWG', 'MWL')
