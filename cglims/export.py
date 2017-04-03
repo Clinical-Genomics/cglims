@@ -54,7 +54,7 @@ def get_familydata(lims_sample):
         'case_id': "{}-{}".format(lims_sample.udf['customer'],
                                   lims_sample.udf['familyID']),
         'gene_panels': lims_sample.udf['Gene List'].split(';'),
-        'reference_genome': lims_sample.udf['Reference Genome'],
+        'reference_genome': lims_sample.udf.get('Reference Genome', 'hg19'),
     }
     return data
 
