@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
+
 from dateutil.parser import parse as parse_date
 from genologics.entities import Sample
 from genologics.lims import Lims
@@ -14,7 +16,7 @@ def connect(config):
     return api
 
 
-class ClinicalSample:
+class ClinicalSample(object):
 
     def __init__(self, lims_sample):
         """ Wrapper around the genologics Sample class
@@ -72,30 +74,37 @@ class ClinicalSample:
         """Get a sample UDF."""
         return self.lims.udf.get(udf_key, default)
 
-    def to_dict(self):
+    def to_dict(self, minimal=False):
         """Export data from the sample object."""
         if self.udf('customer') and self.udf('familyID'):
             case_id = '-'.join([self.udf('customer'), self.udf('familyID')])
         else:
-            case_id = None
+            case_id = 'NA'
 
-        data = {
-            'id': self.lims.id,
+        data = deepcopy(self.lims.udf._lookup)
+        data.update(dict(
+            id=self.lims.id,
             # general sample id if imported from old TSL
-            'sample_id': self.udf('Clinical Genomics ID') or self.lims.id,
-            'name': self.lims.name,
-            'date_received': parse_date(self.lims.date_received),
-            'project_name': self.lims.project.name,
-            'sex': self.sex,
-            'reads': self.ordered_reads,
-            'expected_reads': int(self.ordered_reads * .75),
-            'project_id': self.lims.project.id,
-            'is_human': self.apptag.is_human,
-            'pipeline': self.pipeline,
-            'case_id': case_id,
-            'panels': (self.udf('Gene List').split(';') if
-                       self.udf('Gene List') else None),
-        }
+            sample_id=self.udf('Clinical Genomics ID') or self.lims.id,
+            name=self.lims.name,
+            project_name=self.lims.project.name,
+            project_id=self.lims.project.id,
+            case_id=case_id,
+        ))
+
+        if not minimal:
+            data.update(dict(
+                date_received=parse_date(self.lims.date_received),
+                sex=self.sex,
+                reads=self.ordered_reads,
+                expected_reads=int(self.ordered_reads * .75),
+                is_human=self.apptag.is_human,
+                sequencing_type=self.apptag.sequencing_type,
+                is_external=self.apptag.is_external,
+                pipeline=self.pipeline or 'NA',
+                is_production=(False if data['customer'] == 'cust000' else True),
+                panels=(self.udf('Gene List').split(';') if self.udf('Gene List') else None),
+            ))
         return data
 
 

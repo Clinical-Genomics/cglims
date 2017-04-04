@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-from copy import deepcopy
 import logging
 
 import click
@@ -10,9 +8,8 @@ from cglims import api
 from cglims.api import ClinicalSample
 from cglims.config import make_config, CAPTUREKIT_MAP, relevant_samples
 from cglims.pedigree import make_pedigree
-from cglims.constants import SEX_MAP
 from cglims.panels import convert_panels
-from .utils import jsonify, fix_dump, ordered_reads
+from .utils import jsonify, fix_dump
 
 CAPTUREKITS = CAPTUREKIT_MAP.values()
 log = logging.getLogger(__name__)
@@ -120,55 +117,26 @@ def get(context, condense, project, external, minimal, raw_identifier, field,
         # filter out tumor and cancelled samples
         lims_samples = relevant_samples(lims_samples)
 
-    for sample in lims_samples:
-        values = deepcopy(sample.udf._lookup)
-        values['id'] = sample.id
-        values['name'] = sample.name
-        raw_sample_id = sample.udf.get('Clinical Genomics ID') or sample.id
-        sample_id = "{}--{}".format(raw_sample_id, ext) if ext else raw_sample_id
-        values['sample_id'] = sample_id
-
-        if not minimal:
-            date_parts = map(int, sample.date_received.split('-'))
-            values['date_received'] = datetime(*date_parts)
-            values['project_name'] = sample.project.name
-            values['sex'] = SEX_MAP.get(values.get('Gender'), 'N/A')
-            values['reads'] = ordered_reads(values['Sequencing Analysis'])
-            values['expected_reads'] = int(values['reads'] * .75)
-            values['project_id'] = sample.project.id
-
-            clinical_sample = ClinicalSample(sample)  # upgrade!
-            values['is_human'] = clinical_sample.apptag.is_human
-            values['sequencing_type'] = clinical_sample.apptag.sequencing_type
-            values['is_external'] = clinical_sample.apptag.is_external
-            values['is_production'] = (False if values['customer'] == 'cust000'
-                                       else True)
-            pipeline = clinical_sample.pipeline
-            values['pipeline'] = pipeline if pipeline else 'NA'
-
-            if 'customer' in values and 'familyID' in values:
-                raw_case_id = '-'.join([values['customer'], values['familyID']])
-                case_id = "{}--{}".format(raw_case_id, ext) if ext else raw_case_id
-                values['case_id'] = case_id
-
-            if 'customer' in values and 'Gene List' in values:
-                default_panels = values['Gene List'].split(';')
-                values['panels'] = default_panels
+    for lims_sample in lims_samples:
+        sample_obj = ClinicalSample(lims_sample)
+        data = sample_obj.to_dict(minimal=minimal)
+        data['sample_id'] = "{}--{}".format(data['sample_id'], ext) if ext else data['sample_id']
+        data['case_id'] = "{}--{}".format(data['case_id'], ext) if ext else data['case_id']
 
         if field:
-            if field not in values:
+            if field not in data:
                 log.error("can't find UDF on sample: %s", field)
                 context.abort()
-            elif isinstance(values[field], list):
-                for item in values[field]:
+            elif isinstance(data[field], list):
+                for item in data[field]:
                     click.echo(item)
             else:
-                click.echo(values[field])
+                click.echo(data[field])
         else:
             if condense:
-                dump = jsonify(values)
+                dump = jsonify(data)
             else:
-                raw_dump = yaml.safe_dump(values, default_flow_style=False,
+                raw_dump = yaml.safe_dump(data, default_flow_style=False,
                                           allow_unicode=True)
                 dump = fix_dump(raw_dump)
                 click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
