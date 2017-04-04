@@ -92,8 +92,7 @@ def config(context, gene_panel, family_id, samples, capture_kit, force,
 @click.argument('raw_identifier')
 @click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, external, minimal, raw_identifier, field,
-        all_samples):
+def get(context, condense, project, external, minimal, raw_identifier, field, all_samples):
     """Get information from LIMS: either sample or family samples."""
     if '--' in raw_identifier:
         identifier, ext = raw_identifier.split('--', 1)
@@ -140,8 +139,8 @@ def get(context, condense, project, external, minimal, raw_identifier, field,
                                           allow_unicode=True)
                 dump = fix_dump(raw_dump)
                 click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
-                click.echo(click.style(sample.id, bold=True, fg='red'))
-                if sample.udf.get('cancelled') == 'yes':
+                click.echo(click.style(data['id'], bold=True, fg='red'))
+                if data.get('cancelled') == 'yes':
                     click.echo(click.style('CANCELLED', bold=True, fg='yellow'))
             click.echo(dump)
 
