@@ -6,6 +6,7 @@ import yaml
 
 from cglims import api
 from cglims.api import ClinicalSample
+from cglims.apptag import UnknownSequencingTypeError
 from cglims.config import make_config, CAPTUREKIT_MAP, relevant_samples
 from cglims.pedigree import make_pedigree
 from cglims.panels import convert_panels

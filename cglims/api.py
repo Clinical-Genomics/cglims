@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
+import re
 
 from dateutil.parser import parse as parse_date
 from genologics.entities import Sample
@@ -9,6 +10,7 @@ from cglims.apptag import ApplicationTag
 from cglims.constants import READS_PER_1X, SEX_MAP
 from cglims.exc import MultipleSamplesError
 
+SAMPLE_REF = 'hg19'
 
 def connect(config):
     """Connect and return API reference."""
@@ -107,7 +109,6 @@ class ClinicalSample(object):
             ))
         return data
 
-
 class ClinicalLims(Lims):
 
     def case(self, customer, family_id):
@@ -143,6 +144,45 @@ class ClinicalLims(Lims):
             return delivery_analytes[0].parent_process.udf['Date delivered']
         else:
             return None
+
+class SampleSheetLims:
+
+    """ Holds all functions related to fetching and creating a SampleSheet.csv from LIMS """
+
+    def __init__(self, lims_api):
+        self.lims_api = lims_api
+
+    def _get_lane(self, lane):
+        return int(lane.split(':')[0])
+
+    def _get_index(self, labels):
+        label = labels[0] if labels else None
+    
+        match = re.match(r"^.+ \((.+)\)$", label)
+        if match:
+            return match.group(1)
+        return None
+
+    def fetch(self, flowcell):
+        containers = self.lims_api.get_containers(name=flowcell)
+
+        for container in containers:
+            raw_lanes = sorted(container.placements.keys())
+            for raw_lane in raw_lanes:
+                artifact = container.placements[raw_lane]
+                for sample in artifact.samples:
+                    yield {
+                        'FCID': flowcell,
+                        'Lane': self._get_lane(raw_lane),
+                        'SampleID': sample.id,
+                        'SampleRef': SAMPLE_REF,
+                        'index': self._get_index(artifact.reagent_labels),
+                        'Description': '',
+                        'Control': 'N',
+                        'Recipe': 'R1',
+                        'Operator': 'script',
+                        'Project': sample.project.name
+                    }
 
 
 def deliver(lims_sample):
