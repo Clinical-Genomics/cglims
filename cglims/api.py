@@ -127,6 +127,8 @@ class SamplesheetHandler(object):
         """Get the first and only reagent label from an artifact"""
 
         labels = artifact.reagent_labels
+        if len(labels) > 1:
+            raise ValueError("Expecting at most one reagent label. Got ({}).".format(len(labels)))
         return labels[0] if labels else None
 
     def samplesheet(self, flowcell):
