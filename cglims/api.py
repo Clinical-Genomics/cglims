@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
+import re
 
 from dateutil.parser import parse as parse_date
 from genologics.entities import Sample
@@ -9,6 +10,7 @@ from cglims.apptag import ApplicationTag
 from cglims.constants import READS_PER_1X, SEX_MAP
 from cglims.exc import MultipleSamplesError
 
+SAMPLE_REF = 'hg19'
 
 def connect(config):
     """Connect and return API reference."""
@@ -107,8 +109,68 @@ class ClinicalSample(object):
             ))
         return data
 
+class SamplesheetHandler(object):
 
-class ClinicalLims(Lims):
+    def _get_placement_lane(self, lane):
+        """Parse out the lane information from an artifact.placement"""
+        return int(lane.split(':')[0])
+    
+    def _get_index(self, label):
+        """Parse out the sequence from a reagent label"""
+
+        match = re.match(r"^.+ \((.+)\)$", label)
+        if match:
+            return match.group(1)
+        return None
+
+    def _get_reagent_label(self, artifact):
+        """Get the first and only reagent label from an artifact"""
+
+        labels = artifact.reagent_labels
+        if len(labels) > 1:
+            raise ValueError("Expecting at most one reagent label. Got ({}).".format(len(labels)))
+        return labels[0] if labels else None
+
+    def _get_non_pooled_artifacts(self, artifact):
+        """Find all artifacts associated with this artifact"""
+        artifacts = []
+
+        if len(artifact.samples) == 1:
+            artifacts.append(artifact)
+        else:
+            for input in artifact.input_artifact_list():
+                artifacts.extend(self._get_non_pooled_artifacts(input))
+
+        return artifacts
+
+    def samplesheet(self, flowcell):
+        containers = self.get_containers(name=flowcell)
+
+        for container in containers:
+            raw_lanes = sorted(container.placements.keys())
+            for raw_lane in raw_lanes:
+                lane = self._get_placement_lane(raw_lane)
+                placement_artifact = container.placements[raw_lane]
+                for artifact in self._get_non_pooled_artifacts(placement_artifact):
+                    sample = artifact.samples[0] # we are assured it only has one sample
+                    label = self._get_reagent_label(artifact)
+                    index = self._get_index(label)
+                    yield {
+                        'FCID': flowcell,
+                        'Lane': lane,
+                        'SampleID': sample.id,
+                        'SampleRef': SAMPLE_REF,
+                        'index': index,
+                        'Description': '',
+                        'Control': 'N',
+                        'Recipe': 'R1',
+                        'Operator': 'script',
+                        'Project': sample.project.name
+                    }
+
+
+
+class ClinicalLims(Lims, SamplesheetHandler):
 
     def case(self, customer, family_id):
         filters = {'customer': customer, 'familyID': family_id}
