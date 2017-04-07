@@ -66,7 +66,7 @@ def test_is_panel(apptags):
         if apptag_type == 'microbial':
             assert is_panel == False
         if apptag_type == 'external':
-            assert is_panel == False
+            assert is_panel == True
 
 def test_analysis_type(apptags):
     for apptag_type, apptag in apptags.iteritems():
