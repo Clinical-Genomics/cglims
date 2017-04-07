@@ -109,7 +109,51 @@ class ClinicalSample(object):
             ))
         return data
 
-class ClinicalLims(Lims):
+class SamplesheetHandler(object):
+
+    def _get_placement_lane(self, lane):
+        """Parse out the lane information from an artifact.placement"""
+        return int(lane.split(':')[0])
+    
+    def _get_index(self, label):
+        """Parse out the sequence from a reagent label"""
+
+        match = re.match(r"^.+ \((.+)\)$", label)
+        if match:
+            return match.group(1)
+        return None
+
+    def _get_reagent_label(self, artifact):
+        """Get the first and only reagent label from an artifact"""
+
+        labels = artifact.reagent_labels
+        return labels[0] if labels else None
+
+    def samplesheet(self, flowcell):
+        containers = self.get_containers(name=flowcell)
+
+        for container in containers:
+            raw_lanes = sorted(container.placements.keys())
+            for raw_lane in raw_lanes:
+                artifact = container.placements[raw_lane]
+                label = self._get_reagent_label(artifact)
+                for sample in artifact.samples:
+                    yield {
+                        'FCID': flowcell,
+                        'Lane': self._get_placement_lane(raw_lane),
+                        'SampleID': sample.id,
+                        'SampleRef': SAMPLE_REF,
+                        'index': self._get_index(label),
+                        'Description': '',
+                        'Control': 'N',
+                        'Recipe': 'R1',
+                        'Operator': 'script',
+                        'Project': sample.project.name
+                    }
+
+
+
+class ClinicalLims(Lims, SamplesheetHandler):
 
     def case(self, customer, family_id):
         filters = {'customer': customer, 'familyID': family_id}
@@ -144,45 +188,6 @@ class ClinicalLims(Lims):
             return delivery_analytes[0].parent_process.udf['Date delivered']
         else:
             return None
-
-class SampleSheetLims:
-
-    """ Holds all functions related to fetching and creating a SampleSheet.csv from LIMS """
-
-    def __init__(self, lims_api):
-        self.lims_api = lims_api
-
-    def _get_lane(self, lane):
-        return int(lane.split(':')[0])
-
-    def _get_index(self, labels):
-        label = labels[0] if labels else None
-    
-        match = re.match(r"^.+ \((.+)\)$", label)
-        if match:
-            return match.group(1)
-        return None
-
-    def fetch(self, flowcell):
-        containers = self.lims_api.get_containers(name=flowcell)
-
-        for container in containers:
-            raw_lanes = sorted(container.placements.keys())
-            for raw_lane in raw_lanes:
-                artifact = container.placements[raw_lane]
-                for sample in artifact.samples:
-                    yield {
-                        'FCID': flowcell,
-                        'Lane': self._get_lane(raw_lane),
-                        'SampleID': sample.id,
-                        'SampleRef': SAMPLE_REF,
-                        'index': self._get_index(artifact.reagent_labels),
-                        'Description': '',
-                        'Control': 'N',
-                        'Recipe': 'R1',
-                        'Operator': 'script',
-                        'Project': sample.project.name
-                    }
 
 
 def deliver(lims_sample):
