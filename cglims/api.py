@@ -131,21 +131,36 @@ class SamplesheetHandler(object):
             raise ValueError("Expecting at most one reagent label. Got ({}).".format(len(labels)))
         return labels[0] if labels else None
 
+    def _get_non_pooled_artifacts(self, artifact):
+        """Find all artifacts associated with this artifact"""
+        artifacts = []
+
+        if len(artifact.samples) == 1:
+            artifacts.append(artifact)
+        else:
+            for input in artifact.input_artifact_list():
+                artifacts.extend(self._get_non_pooled_artifacts(input))
+
+        return artifacts
+
     def samplesheet(self, flowcell):
         containers = self.get_containers(name=flowcell)
 
         for container in containers:
             raw_lanes = sorted(container.placements.keys())
             for raw_lane in raw_lanes:
-                artifact = container.placements[raw_lane]
-                label = self._get_reagent_label(artifact)
-                for sample in artifact.samples:
+                lane = self._get_placement_lane(raw_lane)
+                placement_artifact = container.placements[raw_lane]
+                for artifact in self._get_non_pooled_artifacts(placement_artifact):
+                    sample = artifact.samples[0] # we are assured it only has one sample
+                    label = self._get_reagent_label(artifact)
+                    index = self._get_index(label)
                     yield {
                         'FCID': flowcell,
-                        'Lane': self._get_placement_lane(raw_lane),
+                        'Lane': lane,
                         'SampleID': sample.id,
                         'SampleRef': SAMPLE_REF,
-                        'index': self._get_index(label),
+                        'index': index,
                         'Description': '',
                         'Control': 'N',
                         'Recipe': 'R1',
