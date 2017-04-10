@@ -76,6 +76,11 @@ class ClinicalSample(object):
         """Get a sample UDF."""
         return self.lims.udf.get(udf_key, default)
 
+    @property
+    def sample_id(self):
+        """Get the official sample id."""
+        return self.udf('Clinical Genomics ID') or self.lims.id
+
     def to_dict(self, minimal=False):
         """Export data from the sample object."""
         if self.udf('customer') and self.udf('familyID'):
@@ -87,7 +92,7 @@ class ClinicalSample(object):
         data.update(dict(
             id=self.lims.id,
             # general sample id if imported from old TSL
-            sample_id=self.udf('Clinical Genomics ID') or self.lims.id,
+            sample_id=self.sample_id,
             name=self.lims.name,
             project_name=self.lims.project.name,
             project_id=self.lims.project.id,
@@ -205,6 +210,12 @@ class ClinicalLims(Lims, SamplesheetHandler):
             return delivery_analytes[0].parent_process.udf['Date delivered']
         else:
             return None
+
+    def process_samples(lims_process):
+        """Retrieve LIMS input samples from a process."""
+        for artifact in lims_process.all_inputs():
+            for lims_sample in artifact.samples:
+                yield {'sample': lims_sample, 'artifact': artifact}
 
 
 def deliver(lims_sample):
