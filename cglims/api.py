@@ -122,7 +122,6 @@ class SamplesheetHandler(object):
     
     def _get_index(self, label):
         """Parse out the sequence from a reagent label"""
-
         match = re.match(r"^.+ \((.+)\)$", label)
         if match:
             return match.group(1)
@@ -130,14 +129,13 @@ class SamplesheetHandler(object):
 
     def _get_reagent_label(self, artifact):
         """Get the first and only reagent label from an artifact"""
-
         labels = artifact.reagent_labels
         if len(labels) > 1:
             raise ValueError("Expecting at most one reagent label. Got ({}).".format(len(labels)))
         return labels[0] if labels else None
 
     def _get_non_pooled_artifacts(self, artifact):
-        """Find all artifacts associated with this artifact"""
+        """Find the parent artifact of the sample. Should hold the reagent_label"""
         artifacts = []
 
         if len(artifact.samples) == 1:
