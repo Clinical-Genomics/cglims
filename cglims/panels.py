@@ -28,8 +28,7 @@ def convert_panels(customer, default_panels):
             for extra_panel in COMBOS[panel]:
                 all_panels.add(extra_panel)
 
-    if customer in ('cust002', 'cust042'):
-        # add OMIM to every panel choice
-        all_panels.add('OMIM-AUTO')
+    # add OMIM to every panel choice
+    all_panels.add('OMIM-AUTO')
 
     return list(all_panels)
