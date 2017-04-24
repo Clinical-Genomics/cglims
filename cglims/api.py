@@ -118,10 +118,19 @@ class SamplesheetHandler(object):
     def _get_index(self, label):
         """Parse out the sequence from a reagent label"""
 
+        reagent_types = self.get_reagent_types(name=label)
+
+        if len(reagent_types) > 1:
+            raise ValueError("Expecting at most one reagent type. Got ({}).".format(len(reagent_types)))
+
+        reagent_type = reagent_types.pop()
+        sequence = reagent_type.sequence
+
         match = re.match(r"^.+ \((.+)\)$", label)
         if match:
-            return match.group(1)
-        return None
+            assert match.group(1) == sequence
+
+        return sequence
 
     def _get_reagent_label(self, artifact):
         """Get the first and only reagent label from an artifact"""
