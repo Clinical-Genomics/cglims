@@ -169,16 +169,16 @@ class SamplesheetHandler(object):
                     label = self._get_reagent_label(artifact)
                     index = self._get_index(label)
                     yield {
-                        'FCID': flowcell,
-                        'Lane': lane,
-                        'SampleID': sample.id,
-                        'SampleRef': SAMPLE_REF,
+                        'fcid': flowcell,
+                        'lane': lane,
+                        'sample_id': sample.id,
+                        'sample_ref': SAMPLE_REF,
                         'index': index,
-                        'Description': '',
-                        'Control': 'N',
-                        'Recipe': 'R1',
-                        'Operator': 'script',
-                        'Project': sample.project.name
+                        'description': '',
+                        'control': 'N',
+                        'recipe': 'R1',
+                        'operator': 'script',
+                        'project': sample.project.name
                     }
 
 
