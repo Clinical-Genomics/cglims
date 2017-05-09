@@ -182,7 +182,6 @@ class SamplesheetHandler(object):
                     }
 
 
-
 class ClinicalLims(Lims, SamplesheetHandler):
 
     def case(self, customer, family_id):
