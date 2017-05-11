@@ -20,13 +20,8 @@ class ApplicationTag(str):
         self = raw_tag
 
     @property
-    def application(self):
-        """Get the application part of the tag."""
-        return self[0:3]
-
-    @property
     def sequencing(self):
-        """Get the library preparation part of the tag."""
+        """Get the application part of the tag."""
         return self[:3]
 
     @property
@@ -62,9 +57,9 @@ class ApplicationTag(str):
     @property
     def sequencing_type(self):
         """parse application type to figure out type of sequencing."""
-        if self.application in WHOLEGENOME:
+        if self.sequencing in WHOLEGENOME:
             return 'wgs'
-        elif self.application in PANELS:
+        elif self.sequencing in PANELS:
             return 'wes'
         else:
             raise UnknownSequencingTypeError
