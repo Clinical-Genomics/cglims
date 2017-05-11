@@ -3,12 +3,12 @@ import pytest
 from cglims.apptag import UnknownSequencingTypeError
 
 
-def test_sequencing(apptags):
+def test_application(apptags):
     # GIVEN a application tag
     # WHEN parsing sequencing type
     # THEN is should reflect the type
     for apptag_type, apptag in apptags.iteritems():
-        app_type = apptag.sequencing
+        app_type = apptag.application
         if apptag_type == 'wgs':
             assert app_type == 'WGS'
         if apptag_type == 'wes':
