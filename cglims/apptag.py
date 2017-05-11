@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from cglims.constants import READS_PER_1X
 
-PANELS = ('EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX')
-HISEQX = ('WGS', 'WGT', 'WGL', 'MWX')
-ANALYSIS_ONLY = ('EXX', 'WGX')
-MICROBIAL = ('MWX', 'MWG', 'MWL')
-HUMAN = PANELS + HISEQX[:-1] + ANALYSIS_ONLY
+PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
+WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL'])
+ANALYSIS_ONLY = set(['EXX', 'WGX'])
+MICROBIAL = set(['MWX', 'MWG', 'MWL'])
+RNA = set(['RNA', 'RNL'])
+HUMAN = PANELS | WHOLEGENOME - MICROBIAL - RNA | ANALYSIS_ONLY
 
 
 class UnknownSequencingTypeError(Exception):
@@ -17,6 +18,11 @@ class ApplicationTag(str):
     def __init__(self, raw_tag):
         super(ApplicationTag, self).__init__()
         self = raw_tag
+
+    @property
+    def application(self):
+        """Get the application part of the tag."""
+        return self[0:3]
 
     @property
     def sequencing(self):
@@ -40,7 +46,7 @@ class ApplicationTag(str):
 
     @property
     def analysis_type(self):
-        """Return analysis time from tag."""
+        """Return analysis type from tag."""
         if self.sequencing.startswith('WG'):
             return 'wgs'
         elif self.sequencing in PANELS or self.sequencing.startswith('EX'):
@@ -56,12 +62,12 @@ class ApplicationTag(str):
     @property
     def sequencing_type(self):
         """parse application type to figure out type of sequencing."""
-        if self.startswith('WG'):
+        if self.application in WHOLEGENOME:
             return 'wgs'
-        elif self.startswith('EX') or self.startswith('EFT'):
+        elif self.application in PANELS:
             return 'wes'
         else:
-            raise UnknownSequencingTypeError(self.sequencing)
+            raise UnknownSequencingTypeError
 
     @property
     def is_external(self):
