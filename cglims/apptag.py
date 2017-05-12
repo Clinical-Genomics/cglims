@@ -58,8 +58,10 @@ class ApplicationTag(str):
         """parse application type to figure out type of sequencing."""
         if self.startswith('WG'):
             return 'wgs'
-        elif self.startswith('EX') or self.startswith('EFT'):
+        elif self.startswith('EX'):
             return 'wes'
+        elif self.sequencing in ('MHP', 'EFT', 'CCP'):
+            return 'tga'
         else:
             raise UnknownSequencingTypeError(self.sequencing)
 
