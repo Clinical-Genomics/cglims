@@ -81,14 +81,6 @@ class ClinicalSample(object):
         """Get the official sample id."""
         return self.udf('Clinical Genomics ID') or self.lims.id
 
-    def get_received_date(self, lims_id):
-        lims_artifacts = self.get_artifacts(process_type='CG002 - Reception Control',
-                                            samplelimsid=lims_id)
-        for artifact in lims_artifacts:
-            udf_key = 'date arrived at clinical genomics'
-            if artifact.parent_process and artifact.parent_process.udf.get(udf_key):
-                return artifact.parent_process.udf.get(udf_key)
-
     def to_dict(self, minimal=False):
         """Export data from the sample object."""
         if self.udf('customer') and self.udf('familyID'):
@@ -231,6 +223,14 @@ class ClinicalLims(Lims, SamplesheetHandler):
         for artifact in lims_process.all_inputs():
             for lims_sample in artifact.samples:
                 yield {'sample': lims_sample, 'artifact': artifact}
+
+    def get_received_date(self, lims_id):
+        lims_artifacts = self.get_artifacts(process_type='CG002 - Reception Control',
+                                            samplelimsid=lims_id)
+        for artifact in lims_artifacts:
+            udf_key = 'date arrived at clinical genomics'
+            if artifact.parent_process and artifact.parent_process.udf.get(udf_key):
+                return artifact.parent_process.udf.get(udf_key)
 
 
 def deliver(lims_sample):
