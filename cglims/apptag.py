@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+import warnings
+
 from cglims.constants import READS_PER_1X
 
 PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
@@ -27,6 +30,7 @@ class ApplicationTag(str):
     @property
     def sequencing(self):
         """DEPRICATED: replaced by application()."""
+        warnings.warn('Deprecated: use application() instead', DeprecationWarning, stacklevel=2)
         return self[:3]
 
     @property
@@ -47,6 +51,7 @@ class ApplicationTag(str):
     @property
     def analysis_type(self):
         """Return analysis type from tag."""
+        warnings.warn('Deprecated: use sequencing_type() instead', DeprecationWarning, stacklevel=2)
         if self.application.startswith('WG'):
             return 'wgs'
         elif self.application in PANELS or self.application.startswith('EX'):
