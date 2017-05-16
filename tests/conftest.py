@@ -29,6 +29,12 @@ def apptag_external():
 
 
 @pytest.fixture
+def apptag_external_wgs():
+    raw_tag = 'WGXCUSR000'
+    return ApplicationTag(raw_tag)
+
+
+@pytest.fixture
 def apptag_metagenome():
     raw_tag = 'METPCFR020'
     return ApplicationTag(raw_tag)
@@ -47,6 +53,7 @@ def apptags():
         'wes': apptag_wes(),
         'microbial': apptag_microbial(),
         'external': apptag_external(),
+        'external_wgs': apptag_external_wgs(),
         'metagenome': apptag_metagenome(),
         'rml': apptag_rml()
     }

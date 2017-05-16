@@ -17,6 +17,8 @@ def test_application(apptags):
             assert app_type == 'MWG'
         if apptag_type == 'external':
             assert app_type == 'EXX'
+        if apptag_type == 'external_wgs':
+            assert app_type == 'WGX'
         if apptag_type == 'metagenome':
             assert app_type == 'MET'
         if apptag_type == 'rml':
@@ -35,6 +37,8 @@ def test_sequencing_type(apptags):
             assert seq_type == 'wes'
         if apptag_type == 'external':
             assert seq_type == 'wes'
+        if apptag_type == 'external_wgs':
+            assert seq_type == 'wgs'
         if apptag_type == 'metagenome':
             assert seq_type == 'wgs'
         if apptag_type == 'microbial':
@@ -50,6 +54,8 @@ def test_library_prep(apptags):
         if apptag_type == 'microbial':
             assert lib_prep == 'NXT'
         if apptag_type == 'external':
+            assert lib_prep == 'CUS'
+        if apptag_type == 'external_wgs':
             assert lib_prep == 'CUS'
         if apptag_type == 'metagenome':
             assert lib_prep == 'PCF'
@@ -67,6 +73,8 @@ def test_is_human(apptags):
             assert is_human == False
         if apptag_type == 'external':
             assert is_human == True
+        if apptag_type == 'external_wgs':
+            assert is_human == True
         if apptag_type == 'metagenome':
             assert is_human == True
         if apptag_type == 'rml':
@@ -83,26 +91,13 @@ def test_is_panel(apptags):
             assert is_panel == False
         if apptag_type == 'external':
             assert is_panel == True
+        if apptag_type == 'external_wgs':
+            assert is_panel == False
         if apptag_type == 'metagenome':
             assert is_panel == False
         if apptag_type == 'rml':
             assert is_panel == False
 
-def test_analysis_type(apptags):
-    for apptag_type, apptag in apptags.iteritems():
-        analysis_type = apptag.analysis_type
-        if apptag_type == 'wgs':
-            assert analysis_type == 'wgs'
-        if apptag_type == 'wes':
-            assert analysis_type == 'wes'
-        if apptag_type == 'microbial':
-            assert analysis_type == None
-        if apptag_type == 'external':
-            assert analysis_type == 'wes'
-        if apptag_type == 'metagenome':
-            assert analysis_type == None
-        if apptag_type == 'rml':
-            assert analysis_type == None
 
 def test_is_microbial(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -114,6 +109,8 @@ def test_is_microbial(apptags):
         if apptag_type == 'microbial':
             assert is_microbial == True
         if apptag_type == 'external':
+            assert is_microbial == False
+        if apptag_type == 'external_wgs':
             assert is_microbial == False
         if apptag_type == 'metagenome':
             assert is_microbial == False
@@ -131,6 +128,8 @@ def test_is_external(apptags):
             assert is_external == False
         if apptag_type == 'external':
             assert is_external == True
+        if apptag_type == 'external_wgs':
+            assert is_external == True
         if apptag_type == 'metagenome':
             assert is_external == False
         if apptag_type == 'rml':
@@ -146,6 +145,8 @@ def test_reads(apptags):
         if apptag_type == 'microbial':
             assert reads == 3000000
         if apptag_type == 'external':
+            assert reads == 0
+        if apptag_type == 'external_wgs':
             assert reads == 0
         if apptag_type == 'metagenome':
             assert reads == 20000000

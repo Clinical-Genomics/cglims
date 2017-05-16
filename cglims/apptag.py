@@ -5,7 +5,7 @@ import warnings
 from cglims.constants import READS_PER_1X
 
 PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
-WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL'])
+WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX'])
 ANALYSIS_ONLY = set(['EXX', 'WGX'])
 MICROBIAL = set(['MWX', 'MWG', 'MWL'])
 RNA = set(['RNA', 'RNL'])
