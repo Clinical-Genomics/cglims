@@ -72,6 +72,11 @@ class ClinicalSample(object):
         else:
             raise ValueError("unknown read type id: {}".format(type_id))
 
+    @property
+    def expected_reads(self):
+        """Calculate expected number of reads to sequence."""
+        return int(self.ordered_reads * .75)
+
     def udf(self, udf_key, default=None):
         """Get a sample UDF."""
         return self.lims.udf.get(udf_key, default)
@@ -104,7 +109,7 @@ class ClinicalSample(object):
                 date_received=parse_date(self.lims.date_received),
                 sex=self.sex,
                 reads=self.ordered_reads,
-                expected_reads=int(self.ordered_reads * .75),
+                expected_reads=self.expected_reads,
                 is_human=self.apptag.is_human,
                 sequencing_type=self.apptag.sequencing_type,
                 is_external=self.apptag.is_external,
@@ -114,12 +119,13 @@ class ClinicalSample(object):
             ))
         return data
 
+
 class SamplesheetHandler(object):
 
     def _get_placement_lane(self, lane):
         """Parse out the lane information from an artifact.placement"""
         return int(lane.split(':')[0])
-    
+
     def _get_index(self, label):
         """Parse out the sequence from a reagent label"""
 
