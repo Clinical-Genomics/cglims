@@ -52,12 +52,7 @@ class ApplicationTag(str):
     def analysis_type(self):
         """Return analysis type from tag."""
         warnings.warn('Deprecated: use sequencing_type() instead', DeprecationWarning, stacklevel=2)
-        if self.application.startswith('WG'):
-            return 'wgs'
-        elif self.application in PANELS or self.application.startswith('EX'):
-            return 'wes'
-        else:
-            return None
+        return self.sequencing_type()
 
     @property
     def category(self):
