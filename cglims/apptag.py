@@ -55,6 +55,14 @@ class ApplicationTag(str):
             return None
 
     @property
+    def category(self):
+        """Return the category of application."""
+        category = self.sequencing_type
+        if self.is_external:
+            category = "{}-ext".format(category)
+        return category
+
+    @property
     def is_microbial(self):
         """Determine if the order is for regular microbial samples."""
         return self.application in MICROBIAL
@@ -66,6 +74,8 @@ class ApplicationTag(str):
             return 'wgs'
         elif self.application in PANELS:
             return 'wes'
+        elif self.sequencing in ('MHP', 'EFT', 'CCP'):
+            return 'tga'
         else:
             raise UnknownSequencingTypeError
 

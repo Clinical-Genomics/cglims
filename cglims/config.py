@@ -20,7 +20,8 @@ def relevant_samples(lims_samples):
     """Filter out relevant samples for analysis."""
     included = (lims_sample for lims_sample in lims_samples
                 if (lims_sample.udf.get('cancelled') != 'yes' and
-                    lims_sample.udf.get('tumor') != 'yes'))
+                    lims_sample.udf.get('tumor') != 'yes' and
+                    lims_sample.udf.get('exclude analysis') != 'yes'))
     return included
 
 

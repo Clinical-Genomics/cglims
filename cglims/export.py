@@ -32,13 +32,13 @@ def export(context, customer_or_case, family_id):
     click.echo(raw_dump)
 
 
-def export_case(lims, lims_samples):
+def export_case(lims_api, lims_samples):
     """Gather data about a case, multiple samples in LIMS."""
     families = (get_familydata(lims_sample) for lims_sample in lims_samples)
     samples = []
     for lims_sample in lims_samples:
-        artifacts = lims.get_artifacts(samplelimsid=lims_sample.id)
-        data = sample_data(lims_sample, artifacts)
+        artifacts = lims_api.get_artifacts(samplelimsid=lims_sample.id)
+        data = sample_data(lims_api, lims_sample, artifacts)
         samples.append(data)
 
     family_data = consolidate_family(families)
@@ -59,14 +59,15 @@ def get_familydata(lims_sample):
     return data
 
 
-def sample_data(lims_sample, artifacts):
+def sample_data(lims_api, lims_sample, artifacts):
     """Parse out sample specific data."""
     capture_kit = lims_sample.udf.get('Capture Library version')
+    received_at = lims_api.get_received_date(lims_sample.id)
     try:
         data = {
             'id': lims_sample.id,
             'name': lims_sample.name,
-            'received_at': parse_date(lims_sample.date_received),
+            'received_at': received_at,
             'status': lims_sample.udf['Status'].lower(),
             'delivery': lims_sample.udf['Data Analysis'],
             'sex': SEX_MAP.get(lims_sample.udf.get('Gender'), 'N/A'),
@@ -75,7 +76,7 @@ def sample_data(lims_sample, artifacts):
             'priority': lims_sample.udf.get('priority', 'standard'),
             'capture_kit': capture_kit if capture_kit != 'NA' else None,
             'project': lims_sample.project.name,
-            'source': lims_sample.udf['Source'],
+            'source': lims_sample.udf.get('Source', 'N/A'),
         }
     except KeyError as error:
         log.error("missing UDF key for samples: %s", lims_sample.id)
