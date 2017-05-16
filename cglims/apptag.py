@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from cglims.constants import READS_PER_1X
 
-PANELS = ('EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX')
-HISEQX = ('WGS', 'WGT', 'WGL', 'MWX')
-ANALYSIS_ONLY = ('EXX', 'WGX')
-MICROBIAL = ('MWX', 'MWG', 'MWL')
-HUMAN = PANELS + HISEQX[:-1] + ANALYSIS_ONLY
+PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
+WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL'])
+ANALYSIS_ONLY = set(['EXX', 'WGX'])
+MICROBIAL = set(['MWX', 'MWG', 'MWL'])
+RNA = set(['RNA', 'RNL'])
+HUMAN = (PANELS | WHOLEGENOME | ANALYSIS_ONLY) - MICROBIAL - RNA
 
 
 class UnknownSequencingTypeError(Exception):
@@ -19,8 +20,13 @@ class ApplicationTag(str):
         self = raw_tag
 
     @property
+    def application(self):
+        """Get the application part of the tag."""
+        return self[:3]
+
+    @property
     def sequencing(self):
-        """Get the library preparation part of the tag."""
+        """DEPRICATED: replaced by application()."""
         return self[:3]
 
     @property
@@ -31,19 +37,19 @@ class ApplicationTag(str):
     @property
     def is_human(self):
         """Determine if human sequencing."""
-        return self.sequencing in HUMAN
+        return self.application in HUMAN
 
     @property
     def is_panel(self):
         """Determine if sequencing if sequence capture."""
-        return self.sequencing in PANELS
+        return self.application in PANELS
 
     @property
     def analysis_type(self):
-        """Return analysis time from tag."""
-        if self.sequencing.startswith('WG'):
+        """Return analysis type from tag."""
+        if self.application.startswith('WG'):
             return 'wgs'
-        elif self.sequencing in PANELS or self.sequencing.startswith('EX'):
+        elif self.application in PANELS or self.application.startswith('EX'):
             return 'wes'
         else:
             return None
@@ -59,19 +65,19 @@ class ApplicationTag(str):
     @property
     def is_microbial(self):
         """Determine if the order is for regular microbial samples."""
-        return self.sequencing in MICROBIAL
+        return self.application in MICROBIAL
 
     @property
     def sequencing_type(self):
         """parse application type to figure out type of sequencing."""
-        if self.startswith('WG'):
+        if self.application in WHOLEGENOME:
             return 'wgs'
-        elif self.startswith('EX'):
+        elif self.application in PANELS:
             return 'wes'
         elif self.sequencing in ('MHP', 'EFT', 'CCP'):
             return 'tga'
         else:
-            raise UnknownSequencingTypeError(self.sequencing)
+            raise UnknownSequencingTypeError
 
     @property
     def is_external(self):
@@ -80,7 +86,7 @@ class ApplicationTag(str):
         Returns (bool): True when external, False otherwise
         """
 
-        if self.sequencing.endswith('X'):
+        if self.application.endswith('X'):
             return True
         return False
 
