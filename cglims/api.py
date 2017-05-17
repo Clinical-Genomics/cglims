@@ -181,6 +181,7 @@ class SamplesheetHandler(object):
                         'sample_ref': SAMPLE_REF,
                         'index': index,
                         'description': '',
+                        'sample_name': sample.project.name,
                         'control': 'N',
                         'recipe': 'R1',
                         'operator': 'script',
