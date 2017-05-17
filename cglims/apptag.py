@@ -77,7 +77,7 @@ class ApplicationTag(str):
         elif self.sequencing in ('MHP', 'EFT', 'CCP'):
             return 'tga'
         else:
-            raise UnknownSequencingTypeError
+            raise UnknownSequencingTypeError("Application '{}' is unknown.".format(self.application))
 
     @property
     def sequencing_type_mip(self):
