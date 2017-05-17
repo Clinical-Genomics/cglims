@@ -50,7 +50,7 @@ def gather_data(lims_sample):
         'sample_name': lims_sample.name,
         'sex': SEX_MAP[sex_letter],
         'phenotype': lims_sample.udf['Status'].lower(),
-        'analysis_type': app_tag.sequencing_type,
+        'analysis_type': app_tag.sequencing_type_mip,
         'expected_coverage': expected_coverage(app_tag),
     }
     for parent_field in ('fatherID', 'motherID'):

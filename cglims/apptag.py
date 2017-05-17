@@ -80,6 +80,14 @@ class ApplicationTag(str):
             raise UnknownSequencingTypeError
 
     @property
+    def sequencing_type_mip(self):
+        """Convert sequencing type to MIP specific version."""
+        if self.sequencing_type == 'tga':
+            return 'wes'
+        else:
+            return self.sequencing_type
+
+    @property
     def is_external(self):
         """ Determines whether or not a sample is externally sequenced.
 
