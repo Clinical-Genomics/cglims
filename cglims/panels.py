@@ -2,10 +2,9 @@
 """Handle gene panels."""
 
 COLLABORATORS = ('cust000', 'cust002', 'cust003', 'cust004', 'cust042')
-MASTER_LIST = ('ENDO', 'EP', 'IEM', 'IBMFS', 'mtDNA', 'MIT', 'OMIM-AUTO',
-               'PIDCAD', 'PID', 'SKD', 'NMD')
+MASTER_LIST = ('ENDO', 'EP', 'IEM', 'IBMFS', 'mtDNA', 'MIT', 'PEDHEP', 'OMIM-AUTO',
+               'PIDCAD', 'PID', 'SKD', 'NMD', 'ATX', 'CTD', 'ID', 'SPG', 'Ataxi', 'AD-HSP')
 COMBOS = {
-    'ATX': ('ATX', 'SPG', 'Ataxi', 'AD-HSP'),
     'DSD': ('DSD', 'HYP', 'SEXDIF', 'SEXDET'),
     'CM': ('CNM', 'CM'),
     'Horsel': ('Horsel', '141217', '141201'),
