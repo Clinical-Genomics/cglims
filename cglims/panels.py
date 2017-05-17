@@ -3,7 +3,7 @@
 
 COLLABORATORS = ('cust000', 'cust002', 'cust003', 'cust004', 'cust042')
 MASTER_LIST = ('ENDO', 'EP', 'IEM', 'IBMFS', 'mtDNA', 'MIT', 'OMIM-AUTO',
-               'PIDCAD', 'PID', 'SKD')
+               'PIDCAD', 'PID', 'SKD', 'NMD')
 COMBOS = {
     'ATX': ('ATX', 'SPG', 'Ataxi', 'AD-HSP'),
     'DSD': ('DSD', 'HYP', 'SEXDIF', 'SEXDET'),
