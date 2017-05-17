@@ -3,17 +3,15 @@
 import warnings
 
 from cglims.constants import READS_PER_1X
+from cglims.exc import UnknownSequencingTypeError
 
 PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
+TARGETED = set(['MHP', 'EFT', 'CCP'])
 WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX'])
 ANALYSIS_ONLY = set(['EXX', 'WGX'])
 MICROBIAL = set(['MWX', 'MWG', 'MWL'])
 RNA = set(['RNA', 'RNL'])
 HUMAN = (PANELS | WHOLEGENOME | ANALYSIS_ONLY) - MICROBIAL - RNA
-
-
-class UnknownSequencingTypeError(Exception):
-    pass
 
 
 class ApplicationTag(str):
@@ -72,10 +70,10 @@ class ApplicationTag(str):
         """parse application type to figure out type of sequencing."""
         if self.application in WHOLEGENOME:
             return 'wgs'
+        elif self.sequencing in TARGETED:
+            return 'tga'
         elif self.application in PANELS:
             return 'wes'
-        elif self.sequencing in ('MHP', 'EFT', 'CCP'):
-            return 'tga'
         else:
             raise UnknownSequencingTypeError("Application '{}' is unknown.".format(self.application))
 

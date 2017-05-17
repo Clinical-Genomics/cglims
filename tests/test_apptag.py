@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
-from cglims.apptag import UnknownSequencingTypeError
+from cglims.exc import UnknownSequencingTypeError
 
 
 def test_application(apptags):
@@ -23,6 +23,8 @@ def test_application(apptags):
             assert app_type == 'MET'
         if apptag_type == 'rml':
             assert app_type == 'RML'
+        if apptag_type == 'targeted':
+            assert app_type == 'EFT'
 
 def test_sequencing_type(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -43,6 +45,30 @@ def test_sequencing_type(apptags):
             assert seq_type == 'wgs'
         if apptag_type == 'microbial':
             assert seq_type == 'wgs'
+        if apptag_type == 'targeted':
+            assert seq_type == 'tga'
+
+def test_sequencing_type_mip(apptags):
+    for apptag_type, apptag in apptags.iteritems():
+        if apptag_type == 'rml':
+            with pytest.raises(UnknownSequencingTypeError):
+                seq_type = apptag.sequencing_type_mip
+        else:
+            seq_type = apptag.sequencing_type_mip
+        if apptag_type == 'wgs':
+            assert seq_type == 'wgs'
+        if apptag_type == 'wes':
+            assert seq_type == 'wes'
+        if apptag_type == 'external':
+            assert seq_type == 'wes'
+        if apptag_type == 'external_wgs':
+            assert seq_type == 'wgs'
+        if apptag_type == 'metagenome':
+            assert seq_type == 'wgs'
+        if apptag_type == 'microbial':
+            assert seq_type == 'wgs'
+        if apptag_type == 'targeted':
+            assert seq_type == 'wes'
 
 def test_library_prep(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -61,6 +87,8 @@ def test_library_prep(apptags):
             assert lib_prep == 'PCF'
         if apptag_type == 'rml':
             assert lib_prep == 'P10'
+        if apptag_type == 'targeted':
+            assert lib_prep == 'SXT'
 
 def test_is_human(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -79,6 +107,8 @@ def test_is_human(apptags):
             assert is_human == True
         if apptag_type == 'rml':
             assert is_human == False
+        if apptag_type == 'targeted':
+            assert is_human == True
 
 def test_is_panel(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -97,6 +127,8 @@ def test_is_panel(apptags):
             assert is_panel == False
         if apptag_type == 'rml':
             assert is_panel == False
+        if apptag_type == 'targeted':
+            assert is_panel == True
 
 
 def test_is_microbial(apptags):
@@ -116,6 +148,8 @@ def test_is_microbial(apptags):
             assert is_microbial == False
         if apptag_type == 'rml':
             assert is_microbial == False
+        if apptag_type == 'targeted':
+            assert is_microbial == False
 
 def test_is_external(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -133,6 +167,8 @@ def test_is_external(apptags):
         if apptag_type == 'metagenome':
             assert is_external == False
         if apptag_type == 'rml':
+            assert is_external == False
+        if apptag_type == 'targeted':
             assert is_external == False
 
 def test_reads(apptags):
@@ -152,3 +188,5 @@ def test_reads(apptags):
             assert reads == 20000000
         if apptag_type == 'rml':
             assert reads == 150000000
+        if apptag_type == 'targeted':
+            assert reads == 20000000

@@ -47,6 +47,12 @@ def apptag_rml():
 
 
 @pytest.fixture
+def apptag_focused_exome():
+    raw_tag = 'EFTSXTR020'
+    return ApplicationTag(raw_tag)
+
+
+@pytest.fixture
 def apptags():
     return {
         'wgs': apptag_wgs(),
@@ -55,6 +61,7 @@ def apptags():
         'external': apptag_external(),
         'external_wgs': apptag_external_wgs(),
         'metagenome': apptag_metagenome(),
-        'rml': apptag_rml()
+        'rml': apptag_rml(),
+        'targeted': apptag_focused_exome()
     }
 

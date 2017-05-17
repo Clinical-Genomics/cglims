@@ -23,3 +23,7 @@ class LimsSampleCancelled(LimsException):
 
 class MultipleSamplesError(LimsException):
     pass
+
+
+class UnknownSequencingTypeError(Exception):
+    pass
