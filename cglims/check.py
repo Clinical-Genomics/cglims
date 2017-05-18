@@ -5,7 +5,6 @@ import click
 from genologics.entities import Process
 
 from cglims import api
-from cglims.apptag import ApplicationTag
 
 RELATION_UDS = ['motherID', 'fatherID', 'Other relations']
 log = logging.getLogger(__name__)
@@ -94,7 +93,7 @@ def check_sample(lims, lims_sample, lims_artifact=None, update=False, version=No
 def set_missingreads(lims_sample, force=False):
     """Set the 'Reads Missing (M)' UDF base on app tag."""
     raw_apptag = lims_sample.udf['Sequencing Analysis']
-    app_tag = ApplicationTag(raw_apptag)
+    app_tag = api.ApplicationTag(raw_apptag)
     target_amount = app_tag.reads
     missing_reads = lims_sample.udf.get('Reads missing (M)')
     if not force and missing_reads is not None:

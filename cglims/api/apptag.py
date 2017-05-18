@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-
 import warnings
 
-from cglims.constants import READS_PER_1X
 from cglims.exc import UnknownSequencingTypeError
 
 PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
@@ -108,6 +106,6 @@ class ApplicationTag(str):
         elif type_id == 'C':
             if self.is_panel:
                 raise ValueError("can't convert coverage for panels")
-            return number * 10000000 # but should be: number * READS_PER_1X
+            return number * 10000000
         else:
             raise ValueError("unknown read type id: {}".format(type_id))

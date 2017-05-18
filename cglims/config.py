@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from .exc import MissingLimsDataException
-from .apptag import ApplicationTag
-from .panels import convert_panels
+from cglims.exc import MissingLimsDataException
+from cglims.api import ApplicationTag
+from cglims.panels import convert_panels
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
 CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',

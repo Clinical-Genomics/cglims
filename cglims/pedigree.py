@@ -7,17 +7,16 @@ import io
 import copy
 import csv
 
-from .config import get_capture_kit, CAPTUREKIT_MAP
-from .exc import MissingLimsDataException
-from .apptag import ApplicationTag
+from cglims.config import get_capture_kit, CAPTUREKIT_MAP
+from cglims.exc import MissingLimsDataException
+from cglims.api import ApplicationTag
 
 
 PHENOTYPE_MAP = dict(affected='2', unaffected='1', unknown='0')
 SEX_MAP = dict(M='1', F='2', Unknown='other', unknown='other')
 MANDATORY_HEADERS = ['Family ID', 'Individual ID', 'Paternal ID',
                      'Maternal ID', 'Sex', 'Phenotype']
-EXTRA_HEADERS = ['Clinical_db', 'Capture_kit', 'display_name',
-                 'Sequencing_type']
+EXTRA_HEADERS = ['Clinical_db', 'Capture_kit', 'display_name', 'Sequencing_type']
 
 log = logging.getLogger(__name__)
 
