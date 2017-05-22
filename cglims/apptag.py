@@ -50,7 +50,7 @@ class ApplicationTag(str):
     def analysis_type(self):
         """Return analysis type from tag."""
         warnings.warn('Deprecated: use sequencing_type() instead', DeprecationWarning, stacklevel=2)
-        return self.sequencing_type()
+        return self.sequencing_type
 
     @property
     def category(self):
