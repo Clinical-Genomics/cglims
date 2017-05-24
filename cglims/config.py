@@ -2,7 +2,7 @@
 import logging
 
 from cglims.exc import MissingLimsDataException
-from cglims.api import ApplicationTag
+from cglims.api import Sample
 from cglims.panels import convert_panels
 
 SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
@@ -11,203 +11,185 @@ CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
                   'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
                   'SureSelect Focused Exome': 'Agilent_SureSelectFocusedExome.V1',
                   'other': 'Agilent_SureSelectCRE.V1'}
-LATEST_CAPTUREKIT = 'Agilent_SureSelectCRE.V1'
+LATEST_CAPTUREKIT = 'Agilent Sureselect CRE'
 
 log = logging.getLogger(__name__)
 
 
-def relevant_samples(lims_samples):
-    """Filter out relevant samples for analysis."""
-    included = (lims_sample for lims_sample in lims_samples
-                if (lims_sample.udf.get('cancelled') != 'yes' and
-                    lims_sample.udf.get('tumor') != 'yes' and
-                    lims_sample.udf.get('exclude analysis') != 'yes'))
-    return included
+class AnalysisConfig(object):
 
+    """Utility to generate an analysis config for MIP.
 
-def basic_config(lims_api, customer_id, family_id):
-    """Generate data for a basic config."""
-    lims_samples = lims_api.case(customer_id, family_id)
-    included_samples = relevant_samples(lims_samples)
-    data = make_config(lims_api, included_samples, family_id=family_id)
-    # handle single sample cases with 'unknown' phenotype
-    if len(data['samples']) == 1:
-        if data['samples'][0]['phenotype'] == 'unknown':
-            log.info("setting 'unknown' phenotype to 'unaffected'")
-            data['samples'][0]['phenotype'] = 'unaffected'
-    return data
+    Args:
+        lims_api (cglims.api.ClinicalLims): LIMS connection object
+    """
 
+    def __init__(self, lims_api):
+        self.lims = lims_api
+        self.customer_id = None
+        self.family_name = None
 
-def gather_data(lims_sample):
-    """Gather analysis/pedigree data about a sample."""
-    customer = lims_sample.udf['customer']
-    family_id = lims_sample.udf['familyID']
-    sex_letter = lims_sample.udf['Gender']
-    app_tag = ApplicationTag(lims_sample.udf['Sequencing Analysis'])
+    def __call__(self, customer_id, family_name):
+        """Generate an analysis config for a case.
 
-    data = {
-        'sample_id': get_sampleid(lims_sample),
-        'sample_name': lims_sample.name,
-        'sex': SEX_MAP[sex_letter],
-        'phenotype': lims_sample.udf['Status'].lower(),
-        'analysis_type': app_tag.sequencing_type_mip,
-        'expected_coverage': expected_coverage(app_tag),
-    }
-    for parent_field in ('fatherID', 'motherID'):
-        parent_id = lims_sample.udf.get(parent_field)
-        if parent_id and parent_id != '0':
-            data[parent_field.replace('ID', '')] = parent_id
-    return customer, family_id, data
+        Args:
+            customer_id (str): customer id
+            family_name (str): external family name
 
+        Returns:
+            dict: config values ready YAML dump
+        """
+        log.debug('fetch samples from LIMS')
+        samples = self._get_samples(customer_id, family_name)
+        log.debug('transform LIMS data needed for config')
+        config_data = self._transform(samples)
+        log.debug('validate input to config render function')
+        self._validate(config_data)
+        log.debug('render config object')
+        config_obj = self._render(config_data)
+        return config_obj
 
-def expected_coverage(app_tag):
-    """Parse out the expected coverage from the app tag."""
-    read_part = app_tag[-4:]
-    if read_part.startswith('C'):
-        return int(read_part[1:]) * 0.87
-    elif read_part.startswith('R'):
-        # target reads expressed in millions
-        return int(read_part[1:]) * 1.5 * 0.87
-    else:
-        raise ValueError("unexpected app tag: %s", app_tag)
+    def _get_samples(self, customer_id, family_name):
+        """Get sample information from LIMS."""
+        lims_samples = self.lims.case(customer_id, family_name)
+        for lims_sample in lims_samples:
+            sample_obj = Sample(lims_sample)
+            if sample_obj.to_analysis:
+                log.info("include sample: %s", sample_obj['id'])
+                if sample_obj.apptag.sequencing_type_mip == 'wes':
+                    # we need a capture kit
+                    sample_obj['capture_kit'] = self.get_capture_kit(sample_obj)
+                yield sample_obj
 
-
-def make_config(lims_api, lims_samples, customer=None, family_id=None,
-                gene_panels=None, capture_kit=None, force=False):
-    """Make the config for all samples."""
-    samples_data = []
-    customers = set()
-    families = set()
-    all_panels = set()
-    for lims_sample in lims_samples:
-        sample_customer, sample_family, data = gather_data(lims_sample)
-        customers.add(sample_customer)
-        families.add(sample_family)
-
-        # fetch capture kit if sample is exome sequenced
-        if data['analysis_type'] == 'wes':
-            data['capture_kit'] = capture_kit or get_capture_kit(lims_api, lims_sample)
+    def get_capture_kit(self, sample_obj):
+        """Figure out which capture kit has been used for the sample."""
+        udf_kit_key = 'SureSelect capture library/libraries used'
+        udf_key = 'Capture Library version'
+        sample_capture_kit = sample_obj.get(udf_key)
+        if sample_capture_kit and sample_capture_kit != 'NA':
+            log.debug('found manually added capture kit')
+            return sample_capture_kit
         else:
-            # wgs: just fill in a default capture kit for coverage analysis
-            data['capture_kit'] = LATEST_CAPTUREKIT
+            artifacts = self.lims.get_artifacts(samplelimsid=sample_obj['id'], type='Analyte',
+                                                process_type='CG002 - Hybridize Library  (SS XT)')
+            capture_kit = None
+            for artifact in artifacts:
+                try:
+                    capture_kit = artifact.parent_process.udf[udf_kit_key]
+                except KeyError:
+                    log.warning('capture kit not found on expected process')
+                    continue
+                break
 
-        sample_panels = get_genepanels(lims_sample)
-        for sample_panel in sample_panels:
-            all_panels.add(sample_panel)
+            if capture_kit is None:
+                raise MissingLimsDataException("No capture kit: {}".format(sample_obj['id']))
+        return capture_kit.strip()
 
-        # add mandatory columns
-        data['father'] = data.get('father', 0)
-        data['mother'] = data.get('mother', 0)
+    @classmethod
+    def _transform(cls, samples):
+        """Format sample data for config generation."""
+        config_data = {'customer': set(), 'family_name': set(), 'default_panels': set(),
+                       'samples': []}
+        for sample_obj in samples:
+            customer, family_name, sample_data = cls._transform_sample(sample_obj)
+            config_data['customer'].add(customer)
+            config_data['family_name'].add(family_name)
+            config_data['samples'].append(sample_data)
+            for panel_id in sample_obj['panels']:
+                config_data['default_panels'].add(panel_id)
 
-        samples_data.append(data)
+        # Convert external sample references to internal ids
+        cls._internalize_ids(config_data['samples'])
 
-    samples_data = list(internalize_ids(samples_data))
-    if not force:
-        check_relations(samples_data)
+        # MIP can't handle single samples with 'unknown' phenotype
+        if len(config_data['samples']) == 1:
+            if config_data['samples'][0]['phenotype'] == 'unknown':
+                sample_id = config_data['samples'][0]['id']
+                log.warning("setting unknown phenotype to 'unaffected': %s", sample_id)
+                config_data['samples'][0]['phenotype'] = 'unaffected'
 
-    if customer is None:
-        assert len(customers) == 1, "conflicting custs: {}".format(customers)
-        customer = customers.pop()
-    if family_id is None:
-        assert len(families) == 1, "conflicting families: {}".format(families)
-        family_id = families.pop()
+        assert len(config_data['customer']) == 1, 'multiple customers'
+        config_data['customer'] = config_data['customer'].pop()
+        assert len(config_data['family_name']) == 1, 'multiple family names'
+        config_data['family_name'] = config_data['family_name'].pop()
 
-    gene_panels = gene_panels or list(all_panels)
-    case_data = {
-        'owner': customer,
-        'family': family_id,
-        'default_gene_panels': gene_panels,
-        'gene_panels': convert_panels(customer, gene_panels),
-        'samples': samples_data,
-    }
-    return case_data
+        # convert default panels into full set of gene panels
+        config_data['default_panels'] = list(config_data['default_panels'])
+        config_data['panels'] = list(convert_panels(config_data['customer'],
+                                                    config_data['default_panels']))
+        return config_data
 
+    @staticmethod
+    def _internalize_ids(samples_data):
+        """Convert parent sample references to internal IDs."""
+        # internalize sample id's in sample relationships
+        sample_map = {sample['sample_name']: sample['sample_id'] for sample in samples_data}
+        for sample_data in samples_data:
+            for parent_field in ['father', 'mother']:
+                parent_sample = sample_data.get(parent_field)
+                if parent_sample:
+                    if parent_sample not in sample_map:
+                        message = "Missing reference: {} - {}".format(parent_field, parent_sample)
+                        raise MissingLimsDataException(message)
+                    sample_data[parent_field] = sample_map[parent_sample]
 
-def get_genepanels(lims_sample):
-    try:
-        genepanel_str = lims_sample.udf['Gene List']
-        if ':' in genepanel_str:
-            log.warn("wrong separator in 'Gene List': %s", genepanel_str)
-            udf_key = 'Gene List'
-            new_value = genepanel_str.replace(':', ';')
-            lims_sample.udf[udf_key] = new_value
-            log.info("updating %s: '%s' -> '%s'", lims_sample.id,
-                     genepanel_str, new_value)
-            lims_sample.put()
-            genepanel_str = new_value
-    except KeyError:
-        message = "{}: 'Gene List'".format(lims_sample.id)
-        raise MissingLimsDataException(message)
+    @staticmethod
+    def _transform_sample(sample_obj):
+        """Format data for a single sample."""
+        customer = sample_obj['customer']
+        family_name = sample_obj['familyID']
+        sample_data = {
+            'sample_id': sample_obj['old_id'] or sample_obj['id'],
+            'sample_name': sample_obj['name'],
+            'sex': sample_obj['sex'],
+            'phenotype': sample_obj['Status'],
+            'analysis_type': sample_obj.apptag.sequencing_type_mip,
+            'expected_coverage': sample_obj.apptag.expected_coverage,
+        }
 
-    gene_panels = set(gene_panel.strip() for gene_panel in genepanel_str.split(';'))
-    additional = lims_sample.udf.get('Additional Gene List')
-    if additional:
-        gene_panels.add(additional.strip())
+        if sample_data['analysis_type'] == 'wgs':
+            # fill in a default capture kit for coverage analysis
+            sample_data['capture_kit'] = LATEST_CAPTUREKIT
 
-    return list(gene_panels)
-
-
-def get_sampleid(lims_sample, key='Clinical Genomics ID'):
-    """Get the expected LIMS or Clinical Genomics ID."""
-    return lims_sample.udf.get(key) or lims_sample.id
-
-
-def get_capture_kit(lims, lims_sample, udf_key='Capture Library version',
-                    udf_kitkey='SureSelect capture library/libraries used'):
-    """Figure out which capture kit has been used for the sample."""
-    hybrizelib_id = '669'
-    udfs = dict(lims_sample.udf.items())
-    sample_capture_kit = udfs.get(udf_key)
-    if sample_capture_kit and sample_capture_kit != 'NA':
-        log.debug('prefer capture kit annotated on the sample level')
-        capture_kit = lims_sample.udf[udf_key]
-    else:
-        artifacts = lims.get_artifacts(samplelimsid=lims_sample.id,
-                                       type='Analyte')
-        capture_kit = None
-        for artifact in artifacts:
-            if artifact.parent_process:
-                if artifact.parent_process.type.id == hybrizelib_id:
-                    try:
-                        capture_kit = artifact.parent_process.udf[udf_kitkey]
-                    except KeyError:
-                        log.warn('capture kit not found on expected process')
-                        continue
-                    break
-
-        if capture_kit is None:
-            raise MissingLimsDataException("No capture kit annotated: {}"
-                                           .format(lims_sample.id))
-
-    return CAPTUREKIT_MAP[capture_kit.strip()]
-
-
-def internalize_ids(samples):
-    """Replace customer sample ids with internal ids."""
-    sample_map = {sample['sample_name']: sample for sample in samples}
-    for external_id, sample_data in sample_map.items():
-        parent_fields = ['father', 'mother']
-        for parent_field in parent_fields:
-            parent_id = sample_data.get(parent_field)
+        for parent_field in ('fatherID', 'motherID'):
+            parent_id = sample_obj.get(parent_field)
             if parent_id and parent_id != '0':
-                sample_data[parent_field] = sample_map[parent_id]['sample_id']
-        yield sample_data
+                sample_data[parent_field.replace('ID', '')] = parent_id
 
+        return customer, family_name, sample_data
 
-def check_relations(samples):
-    """Check parental relations between samples."""
-    sexes = {sample['sample_id']: sample['sex'] for sample in samples}
-    for sample in samples:
-        if sample['father'] != 0:
-            if sample['father'] not in sexes:
-                raise ValueError("father not referenced: %s", sample['father'])
-            elif sexes[sample['father']] != 'male':
-                sex = sexes[sample['father']]
-                raise ValueError("father sex incorrect: %s, %s", sample['father'], sex)
+    @staticmethod
+    def _validate(config_data):
+        """Validate that config data is correct."""
+        samples_data = config_data['samples']
+        sexes = {sample['sample_id']: sample['sex'] for sample in samples_data}
+        for sample_data in samples_data:
+            for parent_key, expected_sex in [('father', 'male'), ('mother', 'female')]:
+                parent_id = sample_data.get(parent_key)
+                if parent_id:
+                    if sexes[parent_id] != expected_sex:
+                        sex = sexes[parent_id]
+                        raise ValueError("%s sex incorrect: %s, %s", parent_key, parent_id, sex)
 
-        if sample['mother'] != 0:
-            if sample['mother'] not in sexes:
-                raise ValueError("mother not referenced: %s", sample['mother'])
-            elif sexes[sample['mother']] != 'female':
-                sex = sexes[sample['mother']]
-                raise ValueError("mother sex incorrect: %s, %s", sample['mother'], sex)
+    @staticmethod
+    def _render(config_data):
+        """Render an analysis config from input config data."""
+        config_obj = {
+            'owner': config_data['customer'],
+            'family': config_data['family_name'],
+            'default_gene_panels': config_data['default_panels'],
+            'gene_panels': config_data['panels'],
+            'samples': [],
+        }
+        for sample_data in config_data['samples']:
+            config_obj['samples'].append({
+                'sample_id': sample_data['sample_id'],
+                'sample_name': sample_data['sample_name'],
+                'sex': sample_data['sex'],
+                'analysis_type': sample_data['analysis_type'],
+                'expected_coverage': sample_data['expected_coverage'],
+                'mother': sample_data.get('mother', '0'),
+                'father': sample_data.get('father', '0'),
+                'capture_kit': CAPTUREKIT_MAP[sample_data['capture_kit']],
+            })
+        return config_obj

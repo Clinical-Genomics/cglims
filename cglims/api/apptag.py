@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import warnings
 
+from cglims.constants import READS_PER_1X
 from cglims.exc import UnknownSequencingTypeError
 
 PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
@@ -13,10 +14,6 @@ HUMAN = (PANELS | WHOLEGENOME | ANALYSIS_ONLY) - MICROBIAL - RNA
 
 
 class ApplicationTag(str):
-
-    def __init__(self, raw_tag):
-        super(ApplicationTag, self).__init__()
-        self = raw_tag
 
     @property
     def application(self):
@@ -106,6 +103,23 @@ class ApplicationTag(str):
         elif type_id == 'C':
             if self.is_panel:
                 raise ValueError("can't convert coverage for panels")
-            return number * 10000000
+            return number * READS_PER_1X
         else:
             raise ValueError("unknown read type id: {}".format(type_id))
+
+    @property
+    def expected_reads(self):
+        """Calculate expected number of reads to sequence."""
+        return int(self.reads * .75)
+
+    @property
+    def expected_coverage(self):
+        """Parse out the expected coverage from the app tag."""
+        read_part = self[-4:]
+        if read_part.startswith('C'):
+            return int(read_part[1:]) * 0.87
+        elif read_part.startswith('R'):
+            # target reads expressed in millions
+            return int(read_part[1:]) * 1.5 * 0.87
+        else:
+            raise ValueError("unexpected app tag: %s", self)

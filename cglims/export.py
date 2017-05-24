@@ -13,6 +13,112 @@ from cglims.constants import SEX_MAP
 log = logging.getLogger(__name__)
 
 
+class ExportSamples(object):
+
+    """Export information about a group of samples."""
+
+    def __init__(self, lims_api):
+        super(ExportSamples, self).__init__()
+        self.lims = lims_api
+
+    def __call__(self):
+        pass
+
+    def _fetch(self, customer_id, family_name):
+        """Fetch all information from LIMS."""
+        lims_samples = self.lims.case(customer_id, family_name)
+        for lims_sample in lims_samples:
+            sample_obj = api.Sample(lims_sample)
+            yield sample_obj
+
+    @staticmethod
+    def _transform_sample(sample_obj, artifact_data):
+        """Process a single sample with parsed artifact data."""
+        pass
+
+    @staticmethod
+    def _get_familydata(sample_obj):
+        """Parse out common (family-level) data."""
+        data = {
+            'customer': sample_obj['customer'],
+            'family_id': sample_obj['familyID'],
+            'case_id': sample_obj['case_id'],
+            'gene_panels': sample_obj['panels'],
+            'reference_genome': sample_obj.get('Reference Genome', 'hg19'),
+        }
+        return data
+
+    @staticmethod
+    def _consolidate_family(families_data):
+        """Consolidate family data across multiple samples."""
+        for index, family in enumerate(families_data):
+            if index == 0:
+                new_data = copy.deepcopy(family)
+                gene_panels = set(new_data['gene_panels'])
+
+            else:
+                assert family['customer'] == new_data['customer']
+                assert family['family_id'] == new_data['family_id']
+                assert family['reference_genome'] == new_data['reference_genome']
+                for gene_panel in family['gene_panels']:
+                    gene_panels.add(gene_panel)
+
+        new_data['gene_panels'] = list(gene_panels)
+        return new_data
+
+
+    def _parse_artifacts(self, lims_artifacts):
+        """Parse info from sample artifacts."""
+        data = {}
+        for artifact in lims_artifacts:
+            if artifact.parent_process is None:
+                continue
+            elif artifact.parent_process.type.id == '33':
+                process = artifact.parent_process
+                data['capture_kit'] = process.udf['Capture Library version']
+                data['library_prep_method'] = process.udf['Method document and version no:']
+                data['library_prep_lotno'] = process.udf['Lot no: Capture library']
+            elif artifact.parent_process.type.id == '667':
+                # PCR Free library prep
+                method_no = artifact.parent_process.udf['Method document']
+                method_version = artifact.parent_process.udf['Method document version']
+                data['library_prep_method'] = ":".join([method_no, method_version])
+            elif artifact.parent_process.type.id == '663':
+                # sequencing (cluster generation...)
+                method_no = artifact.parent_process.udf['Method']
+                method_version = artifact.parent_process.udf['Version']
+                data['sequencing_method'] = ":".join([method_no, method_version])
+                data['flowcell'] = artifact.parent_process.udf['Experiment Name']
+            elif artifact.parent_process.type.id in ('670', '671'):
+                # more seq (actual sequencing process)
+                # or for EX: CG002 - Illumina Sequencing (Illumina SBS)
+                if 'sequencing_date' not in data:
+                    # get the start date for sequenceing
+                    data['sequencing_date'] = parse_date(artifact.parent_process.date_run)
+            elif artifact.parent_process.type.id == '159':
+                # delivery
+                delivery_date = artifact.parent_process.udf['Date delivered']
+                data['delivery_date'] = datetime.combine(delivery_date, datetime.min.time())
+                method_no = artifact.parent_process.udf['Method Document']
+                method_version = artifact.parent_process.udf['Method Version']
+                data['delivery_method'] = ':'.join([method_no, method_version])
+            elif artifact.parent_process.type.id == '669':
+                # CG002 - Hybridize Library  (SS XT)
+                process = artifact.parent_process
+                capture_kit_udf = 'SureSelect capture library/libraries used'
+                data['capture_kit'] = process.udf[capture_kit_udf]
+                method_no = process.udf['Method document']
+                method_version = artifact.parent_process.udf['Method document versio']
+                data['library_prep_method'] = ":".join([method_no, method_version])
+            elif artifact.parent_process.type.id == '664':
+                # CG002 - Cluster Generation (Illumina SBS)
+                method_no = artifact.parent_process.udf['Method Document 1']
+                method_version = artifact.parent_process.udf['Document 1 Version']
+                data['sequencing_method'] = ":".join([method_no, method_version])
+                raw_flowcell = artifact.parent_process.udf['Experiment Name']
+                data['flowcell'] = raw_flowcell.split(' ')[0]
+
+
 @click.command()
 @click.argument('customer_or_case')
 @click.argument('family_id', required=False)
@@ -44,19 +150,6 @@ def export_case(lims_api, lims_samples):
     family_data = consolidate_family(families)
     family_data['samples'] = list(samples)
     return family_data
-
-
-def get_familydata(lims_sample):
-    """Parse out common (family-level) data."""
-    data = {
-        'customer': lims_sample.udf['customer'],
-        'family_id': lims_sample.udf['familyID'],
-        'case_id': "{}-{}".format(lims_sample.udf['customer'],
-                                  lims_sample.udf['familyID']),
-        'gene_panels': lims_sample.udf['Gene List'].split(';'),
-        'reference_genome': lims_sample.udf.get('Reference Genome', 'hg19'),
-    }
-    return data
 
 
 def sample_data(lims_api, lims_sample, artifacts):

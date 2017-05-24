@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from cglims.apptag import ApplicationTag
+from cglims.api import ApplicationTag, Sample
 
 
 @pytest.fixture
@@ -65,3 +65,39 @@ def apptags():
         'targeted': apptag_focused_exome()
     }
 
+
+@pytest.fixture
+def sample_obj():
+    _sample_obj = Sample()
+    sample_id = 'SVE2300A5'
+    sample_name = '17010-I-1A'
+    udfs = {
+        'Application Tag Version': '1',
+        'Capture Library version': 'NA',
+        'Concentration (nM)': 'NA',
+        'Data Analysis': 'scout',
+        'Gender': 'M',
+        'Gene List': 'EP',
+        'Index number': 'NA',
+        'Index type': 'NA',
+        'Passed Sequencing QC': 'False',
+        'Process only if QC OK': 'yes',
+        'Reads missing (M)': 0,
+        'Reference Genome': 'hg19',
+        'Reference Genome Microbial': 'NA',
+        'Sample Buffer': 'NA',
+        'Sequencing Analysis': 'WGTPCFC030',
+        'Source': 'blood',
+        'Status': 'affected',
+        'Strain': 'NA',
+        'Total Reads (M)': 882.716858,
+        'Volume (uL)': 'NA',
+        'customer': 'cust003',
+        'familyID': '17010',
+        'fatherID': '17010-II-1U',
+        'motherID': '17010-II-2U',
+        'pool name': 'NA',
+        'priority': 'standard',
+    }
+    _sample_obj._parse_data(sample_id, sample_name, udfs)
+    return _sample_obj
