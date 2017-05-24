@@ -182,7 +182,7 @@ def test_reads(apptags):
     for apptag_type, apptag in apptags.iteritems():
         reads = apptag.reads
         if apptag_type == 'wgs':
-            assert reads == 10000000 * 30
+            assert int(reads) == 866666666
         if apptag_type == 'wes':
             assert reads == 100000000
         if apptag_type == 'microbial':
