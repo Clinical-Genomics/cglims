@@ -5,7 +5,7 @@ import logging
 
 import click
 from dateutil.parser import parse as parse_date
-import yaml
+import ruamel.yaml
 
 from cglims import api
 from cglims.constants import SEX_MAP
@@ -46,60 +46,6 @@ class ExportSamples(object):
         for lims_sample in lims_samples:
             sample_obj = api.Sample(lims_sample)
             yield sample_obj
-
-    @staticmethod
-    def _transform_sample(sample_obj):
-        """Process a single sample with parsed artifact data."""
-        capture_kit = sample_obj.get('Capture Library version')
-        try:
-            sample_data = {
-                'id': sample_obj['id'],
-                'name': sample_obj['name'],
-                'status': sample_obj['Status'],
-                'delivery': sample_obj['Data Analysis'],
-                'sex': SEX_MAP.get(sample_obj.get('Gender'), 'N/A'),
-                'app_tag': sample_obj['Sequencing Analysis'],
-                'app_tag_version': int(sample_obj.get('Application Tag Version', '1')),
-                'priority': sample_obj.get('priority', 'standard'),
-                'capture_kit': capture_kit if capture_kit != 'NA' else None,
-                'project': sample_obj.project['name'],
-                'source': sample_obj.get('Source', 'N/A'),
-            }
-        except KeyError as error:
-            log.error("missing UDF key for sample: %s", sample_obj['id'])
-            click.echo(sample_obj.items(), err=True)
-            raise error
-        return sample_data
-
-    @staticmethod
-    def _get_familydata(sample_obj):
-        """Parse out common (family-level) data."""
-        family_data = {
-            'customer': sample_obj['customer'],
-            'family_id': sample_obj['familyID'],
-            'case_id': sample_obj['case_id'],
-            'gene_panels': sample_obj['panels'],
-            'reference_genome': sample_obj.get('Reference Genome', 'hg19'),
-        }
-        return family_data
-
-    @staticmethod
-    def _consolidate_family(families_data):
-        """Consolidate family data across multiple samples."""
-        for index, family in enumerate(families_data):
-            if index == 0:
-                new_data = copy.deepcopy(family)
-                gene_panels = set(new_data['gene_panels'])
-
-            else:
-                assert family['customer'] == new_data['customer']
-                assert family['family_id'] == new_data['family_id']
-                assert family['reference_genome'] == new_data['reference_genome']
-                for gene_panel in family['gene_panels']:
-                    gene_panels.add(gene_panel)
-
-        new_data['gene_panels'] = list(gene_panels)
-        return new_data
 
     def _parse_artifacts(self, lims_artifacts):
         """Parse info from sample artifacts."""
@@ -157,6 +103,60 @@ class ExportSamples(object):
                 data['flowcell'] = raw_flowcell.split(' ')[0]
         return data
 
+    @staticmethod
+    def _transform_sample(sample_obj):
+        """Process a single sample with parsed artifact data."""
+        capture_kit = sample_obj.get('Capture Library version')
+        try:
+            sample_data = {
+                'id': sample_obj['id'],
+                'name': sample_obj['name'],
+                'status': sample_obj['Status'],
+                'delivery': sample_obj['Data Analysis'],
+                'sex': SEX_MAP.get(sample_obj.get('Gender'), 'N/A'),
+                'app_tag': sample_obj['Sequencing Analysis'],
+                'app_tag_version': int(sample_obj.get('Application Tag Version', '1')),
+                'priority': sample_obj.get('priority', 'standard'),
+                'capture_kit': capture_kit if capture_kit != 'NA' else None,
+                'project': sample_obj.project['name'],
+                'source': sample_obj.get('Source', 'N/A'),
+            }
+        except KeyError as error:
+            log.error("missing UDF key for sample: %s", sample_obj['id'])
+            click.echo(sample_obj.items(), err=True)
+            raise error
+        return sample_data
+
+    @staticmethod
+    def _get_familydata(sample_obj):
+        """Parse out common (family-level) data."""
+        family_data = {
+            'customer': sample_obj['customer'],
+            'family_id': sample_obj['familyID'],
+            'case_id': sample_obj['case_id'],
+            'gene_panels': sample_obj['panels'],
+            'reference_genome': sample_obj.get('Reference Genome', 'hg19'),
+        }
+        return family_data
+
+    @staticmethod
+    def _consolidate_family(families_data):
+        """Consolidate family data across multiple samples."""
+        for index, family in enumerate(families_data):
+            if index == 0:
+                new_data = copy.deepcopy(family)
+                gene_panels = set(new_data['gene_panels'])
+
+            else:
+                assert family['customer'] == new_data['customer']
+                assert family['family_id'] == new_data['family_id']
+                assert family['reference_genome'] == new_data['reference_genome']
+                for gene_panel in family['gene_panels']:
+                    gene_panels.add(gene_panel)
+
+        new_data['gene_panels'] = list(gene_panels)
+        return new_data
+
 
 @click.command()
 @click.argument('customer_or_case')
@@ -173,5 +173,5 @@ def export(context, customer_or_case, family_name):
         customer_id, family_name = customer_or_case.split('-', 1)
 
     export_data = case_exporter(customer_id, family_name)
-    raw_dump = yaml.safe_dump(export_data, default_flow_style=False, allow_unicode=True)
+    raw_dump = ruamel.yaml.round_trip_dump(export_data)
     click.echo(raw_dump)

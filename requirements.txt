@@ -1,6 +1,6 @@
 click
 genologics
-PyYAML
+ruamel.yaml
 six
 python-dateutil
 coloredlogs

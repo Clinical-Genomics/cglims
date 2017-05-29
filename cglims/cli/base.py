@@ -5,7 +5,7 @@ import os
 import pkg_resources
 
 import click
-import yaml
+import ruamel.yaml
 
 from .log import init_log
 
@@ -56,7 +56,7 @@ def build_cli(title):
                   "~/.{}.yaml".format(title))
         if os.path.exists(config):
             with codecs.open(config) as conf_handle:
-                context.obj = yaml.load(conf_handle)
+                context.obj = ruamel.yaml.safe_load(conf_handle)
         else:
             context.obj = {}
 

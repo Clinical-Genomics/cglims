@@ -2,75 +2,59 @@
 import logging
 
 import click
-import yaml
+import ruamel.yaml
 
 from cglims import api
-from cglims.api import ClinicalSample
+from cglims.api import Sample
 from cglims.panels import convert_panels
-from .utils import jsonify, fix_dump
 
 log = logging.getLogger(__name__)
 
 
 @click.command()
-@click.option('-c', '--condense', is_flag=True, help='condense output')
 @click.option('-p', '--project', is_flag=True, help='identifier is a project')
 @click.option('-n', '--external', is_flag=True, help='identifier is the customer sample name')
 @click.option('-m', '--minimal', is_flag=True, help='output minimal information')
 @click.option('--all', '--all-samples', is_flag=True, help='include cancelled/tumor samples')
-@click.argument('raw_identifier')
+@click.argument('identifier')
 @click.argument('field', required=False)
 @click.pass_context
-def get(context, condense, project, external, minimal, raw_identifier, field, all_samples):
+def get(context, project, external, minimal, identifier, field, all_samples):
     """Get information from LIMS: either sample or family samples."""
-    if '--' in raw_identifier:
-        identifier, ext = raw_identifier.split('--', 1)
-    else:
-        identifier, ext = raw_identifier, None
-
-    lims = api.connect(context.obj)
+    lims_api = api.connect(context.obj)
     if project:
-        lims_samples = lims.get_samples(projectlimsid=identifier)
+        lims_samples = lims_api.get_samples(projectlimsid=identifier)
     elif identifier.startswith('cust'):
         # look up samples in a case
-        lims_samples = lims.case(*identifier.split('-', 1))
+        lims_samples = lims_api.case(*identifier.split('-', 1))
     elif external:
-        lims_samples = lims.get_samples(name=identifier)
+        lims_samples = lims_api.get_samples(name=identifier)
     else:
         # look up a single sample
         is_cgid = True if identifier[0].isdigit() else False
-        lims_samples = [lims.sample(identifier, is_cgid=is_cgid)]
-
-    if len(lims_samples) > 1 and not all_samples:
-        # filter out tumor and cancelled samples
-        lims_samples = relevant_samples(lims_samples)
+        lims_samples = [lims_api.sample(identifier, is_cgid=is_cgid)]
 
     for lims_sample in lims_samples:
-        sample_obj = ClinicalSample(lims_sample)
-        data = sample_obj.to_dict(minimal=minimal)
-        data['sample_id'] = "{}--{}".format(data['sample_id'], ext) if ext else data['sample_id']
-        data['case_id'] = "{}--{}".format(data['case_id'], ext) if ext else data['case_id']
+        sample_obj = Sample(lims_sample)
+        if not all_samples and not sample_obj.to_analysis:
+            log.debug("sample not for analysis: %s", sample_obj['id'])
+            continue
 
         if field:
-            if field not in data:
+            if field not in sample_obj:
                 log.error("can't find UDF on sample: %s", field)
                 context.abort()
-            elif isinstance(data[field], list):
-                for item in data[field]:
+            elif isinstance(sample_obj[field], list):
+                for item in sample_obj[field]:
                     click.echo(item)
             else:
-                click.echo(data[field])
+                click.echo(sample_obj[field])
         else:
-            if condense:
-                dump = jsonify(data)
-            else:
-                raw_dump = yaml.safe_dump(data, default_flow_style=False,
-                                          allow_unicode=True)
-                dump = fix_dump(raw_dump)
-                click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
-                click.echo(click.style(data['id'], bold=True, fg='red'))
-                if data.get('cancelled') == 'yes':
-                    click.echo(click.style('CANCELLED', bold=True, fg='yellow'))
+            dump = ruamel.yaml.round_trip_dump(dict(sample_obj))
+            click.echo(click.style('>>> Sample: ', fg='red'), nl=False)
+            click.echo(click.style(sample_obj['id'], bold=True, fg='red'))
+            if sample_obj.get('cancelled') == 'yes':
+                click.echo(click.style('CANCELLED', bold=True, fg='yellow'))
             click.echo(dump)
 
 
@@ -92,65 +76,6 @@ def update(context, lims_id, field_key, new_value):
 
 
 @click.command()
-@click.argument('sample_id')
-@click.pass_context
-def fillin(context, sample_id):
-    """Fill in defaults for a LIMS sample."""
-    lims_api = api.connect(context.obj)
-    lims_sample = lims_api.sample(sample_id)
-    click.echo("filling in defaults...")
-    set_defaults(lims_sample)
-    lims_sample.put()
-    click.echo("saved new defaults")
-
-
-def set_defaults(lims_sample):
-    """Set default values for required UDFs."""
-    log.info("setting defaults for required fields")
-    lims_sample.udf['Concentration (nM)'] = 'NA'
-    lims_sample.udf['Volume (uL)'] = 'NA'
-    lims_sample.udf['Capture Library version'] = 'NA'
-    lims_sample.udf['Strain'] = 'NA'
-    lims_sample.udf['Source'] = 'other'
-    lims_sample.udf['Index type'] = 'NA'
-    lims_sample.udf['Index number'] = 'NA'
-    lims_sample.udf['Sample Buffer'] = 'NA'
-    lims_sample.udf['Reference Genome Microbial'] = 'NA'
-    gender = lims_sample.udf.get('Gender')
-    if gender:
-        lims_sample.udf['Gender'] = gender.upper()
-    else:
-        lims_sample.udf['Gender'] = 'unknown'
-    if lims_sample.udf.get('Status'):
-        lims_sample.udf['Status'] = lims_sample.udf.get('Status').lower()
-
-    if lims_sample.udf.get('Source') == 'Blod':
-        log.info("updating 'Source': 'Blod' => 'blood'")
-        lims_sample.udf['Source'] = 'blood'
-
-    if 'priority' in lims_sample.udf:
-        if lims_sample.udf.get('priority') == 'prioriterad':
-            log.info("updating 'priority': 'prioriterad' => 'priority'")
-            lims_sample.udf['priority'] = 'priority'
-        else:
-            lims_sample.udf['priority'] = lims_sample.udf['priority'].lower()
-    else:
-        log.info("missing 'priority' => setting to 'standard'")
-        lims_sample.udf['priority'] = 'standard'
-
-    process_only = lims_sample.udf.get('Process only if QC OK')
-    if process_only == 'Ja':
-        log.info("translating 'QC OK' field: 'Ja' => 'yes'")
-        lims_sample.udf['Process only if QC OK'] = 'yes'
-    elif process_only == 'Nej':
-        log.info("translating 'QC OK' field: 'Nej' => 'no'")
-        lims_sample.udf['Process only if QC OK'] = 'no'
-    elif process_only is None:
-        log.info("setting 'QC OK' field to default: 'NA'")
-        lims_sample.udf['Process only if QC OK'] = 'NA'
-
-
-@click.command()
 @click.argument('customer')
 @click.argument('default_panels', nargs=-1)
 @click.pass_context
@@ -158,19 +83,3 @@ def panels(context, customer, default_panels):
     """Convert between default panels and gene list panels."""
     for panel_id in convert_panels(customer, default_panels):
         click.echo(panel_id)
-
-
-@click.command()
-@click.option('-d', '--delivered', is_flag=True, help='check if sample is delivered')
-@click.argument('lims_id')
-@click.pass_context
-def sample(context, delivered, lims_id):
-    """Fetch information about a sample."""
-    lims_api = api.connect(context.obj)
-    if delivered:
-        delivery_date = lims_api.is_delivered(lims_id)
-        if delivery_date:
-            click.echo(delivery_date)
-        else:
-            log.error("sample not yet delivered")
-            context.abort()

@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from cglims.exc import MissingLimsDataException
 from cglims.api import Sample
+from cglims.constants import CAPTUREKIT_MAP, LATEST_CAPTUREKIT
+from cglims.exc import MissingLimsDataException
 from cglims.panels import convert_panels
-
-SEX_MAP = dict(M='male', F='female', Unknown='unknown', unknown='unknown')
-CAPTUREKIT_MAP = {'Agilent Sureselect CRE': 'Agilent_SureSelectCRE.V1',
-                  'SureSelect CRE': 'Agilent_SureSelectCRE.V1',
-                  'Agilent Sureselect V5': 'Agilent_SureSelect.V5',
-                  'SureSelect Focused Exome': 'Agilent_SureSelectFocusedExome.V1',
-                  'other': 'Agilent_SureSelectCRE.V1'}
-LATEST_CAPTUREKIT = 'Agilent Sureselect CRE'
 
 log = logging.getLogger(__name__)
 
