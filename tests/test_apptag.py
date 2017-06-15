@@ -15,6 +15,8 @@ def test_application(apptags):
             assert app_type == 'EXO'
         if apptag_type == 'microbial':
             assert app_type == 'MWG'
+        if apptag_type == 'rna':
+            assert app_type == 'RNL'
         if apptag_type == 'external':
             assert app_type == 'EXX'
         if apptag_type == 'external_wgs':
@@ -28,7 +30,7 @@ def test_application(apptags):
 
 def test_sequencing_type(apptags):
     for apptag_type, apptag in apptags.iteritems():
-        if apptag_type == 'rml':
+        if apptag_type == 'rml' or apptag_type == 'rna':
             with pytest.raises(UnknownSequencingTypeError):
                 seq_type = apptag.sequencing_type
         else:
@@ -50,7 +52,7 @@ def test_sequencing_type(apptags):
 
 def test_sequencing_type_mip(apptags):
     for apptag_type, apptag in apptags.iteritems():
-        if apptag_type == 'rml':
+        if apptag_type == 'rml' or apptag_type == 'rna':
             with pytest.raises(UnknownSequencingTypeError):
                 seq_type = apptag.sequencing_type_mip
         else:
@@ -79,6 +81,8 @@ def test_library_prep(apptags):
             assert lib_prep == 'SXT'
         if apptag_type == 'microbial':
             assert lib_prep == 'NXT'
+        if apptag_type == 'rna':
+            assert lib_prep == 'POA'
         if apptag_type == 'external':
             assert lib_prep == 'CUS'
         if apptag_type == 'external_wgs':
@@ -98,6 +102,8 @@ def test_is_human(apptags):
         if apptag_type == 'wes':
             assert is_human == True
         if apptag_type == 'microbial':
+            assert is_human == False
+        if apptag_type == 'rna':
             assert is_human == False
         if apptag_type == 'external':
             assert is_human == True
@@ -119,6 +125,8 @@ def test_is_panel(apptags):
             assert is_panel == True
         if apptag_type == 'microbial':
             assert is_panel == False
+        if apptag_type == 'rna':
+            assert is_panel == False
         if apptag_type == 'external':
             assert is_panel == True
         if apptag_type == 'external_wgs':
@@ -129,7 +137,6 @@ def test_is_panel(apptags):
             assert is_panel == False
         if apptag_type == 'targeted':
             assert is_panel == True
-
 
 def test_is_microbial(apptags):
     for apptag_type, apptag in apptags.iteritems():
@@ -140,6 +147,8 @@ def test_is_microbial(apptags):
             assert is_microbial == False
         if apptag_type == 'microbial':
             assert is_microbial == True
+        if apptag_type == 'rna':
+            assert is_microbial == False
         if apptag_type == 'external':
             assert is_microbial == False
         if apptag_type == 'external_wgs':
@@ -151,6 +160,28 @@ def test_is_microbial(apptags):
         if apptag_type == 'targeted':
             assert is_microbial == False
 
+def test_is_rna(apptags):
+    for apptag_type, apptag in apptags.iteritems():
+        is_rna = apptag.is_rna
+        if apptag_type == 'wgs':
+            assert is_rna == False
+        if apptag_type == 'wes':
+            assert is_rna == False
+        if apptag_type == 'microbial':
+            assert is_rna == False
+        if apptag_type == 'rna':
+            assert is_rna == True
+        if apptag_type == 'external':
+            assert is_rna == False
+        if apptag_type == 'external_wgs':
+            assert is_rna == False
+        if apptag_type == 'metagenome':
+            assert is_rna == False
+        if apptag_type == 'rml':
+            assert is_rna == False
+        if apptag_type == 'targeted':
+            assert is_rna == False
+
 def test_is_external(apptags):
     for apptag_type, apptag in apptags.iteritems():
         is_external = apptag.is_external
@@ -159,6 +190,8 @@ def test_is_external(apptags):
         if apptag_type == 'wes':
             assert is_external == False
         if apptag_type == 'microbial':
+            assert is_external == False
+        if apptag_type == 'rna':
             assert is_external == False
         if apptag_type == 'external':
             assert is_external == True
@@ -180,6 +213,8 @@ def test_reads(apptags):
             assert reads == 100000000
         if apptag_type == 'microbial':
             assert reads == 3000000
+        if apptag_type == 'rna':
+            assert reads == 30000000
         if apptag_type == 'external':
             assert reads == 0
         if apptag_type == 'external_wgs':

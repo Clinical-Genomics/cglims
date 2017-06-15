@@ -66,6 +66,11 @@ class ApplicationTag(str):
         return self.application in MICROBIAL
 
     @property
+    def is_rna(self):
+        """Determine if the order is for RNAseq samples."""
+        return self.application in RNA
+
+    @property
     def sequencing_type(self):
         """parse application type to figure out type of sequencing."""
         if self.application in WHOLEGENOME:

@@ -23,6 +23,12 @@ def apptag_microbial():
 
 
 @pytest.fixture
+def apptag_rna():
+    raw_tag = 'RNLPOAR030'
+    return ApplicationTag(raw_tag)
+
+
+@pytest.fixture
 def apptag_external():
     raw_tag = 'EXXCUSR000'
     return ApplicationTag(raw_tag)
@@ -58,6 +64,7 @@ def apptags():
         'wgs': apptag_wgs(),
         'wes': apptag_wes(),
         'microbial': apptag_microbial(),
+        'rna': apptag_rna(),
         'external': apptag_external(),
         'external_wgs': apptag_external_wgs(),
         'metagenome': apptag_metagenome(),
