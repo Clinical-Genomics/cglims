@@ -102,7 +102,7 @@ def sample_data(lims_api, lims_sample, artifacts):
             method_no = artifact.parent_process.udf['Method']
             method_version = artifact.parent_process.udf['Version']
             data['sequencing_method'] = ":".join([method_no, method_version])
-            data['flowcell'] = artifact.parent_process.udf['Experiment Name']
+            data['flowcell'] = artifact.container.name if artifact.container else None
         elif artifact.parent_process.type.id in ('670', '671'):
             # more seq (actual sequencing process)
             # or for EX: CG002 - Illumina Sequencing (Illumina SBS)
