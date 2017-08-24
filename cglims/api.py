@@ -165,7 +165,8 @@ class SamplesheetHandler(object):
     def samplesheet(self, flowcell):
         containers = self.get_containers(name=flowcell)
 
-        for container in containers:
+        if containers:
+            container = containers[-1] # only take the last one. See ÖA#217.
             raw_lanes = sorted(container.placements.keys())
             for raw_lane in raw_lanes:
                 lane = self._get_placement_lane(raw_lane)
