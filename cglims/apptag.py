@@ -9,7 +9,7 @@ PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
 TARGETED = set(['MHP', 'EFT', 'CCP'])
 WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX'])
 ANALYSIS_ONLY = set(['EXX', 'WGX'])
-MICROBIAL = set(['MWX', 'MWG', 'MWL'])
+MICROBIAL = set(['MWX', 'MWG', 'MWL', 'MWR'])
 RNA = set(['RNA', 'RNL'])
 HUMAN = (PANELS | WHOLEGENOME | ANALYSIS_ONLY) - MICROBIAL - RNA
 
