@@ -134,7 +134,10 @@ class SamplesheetHandler(object):
         if len(reagent_types) > 1:
             raise ValueError("Expecting at most one reagent type. Got ({}).".format(len(reagent_types)))
 
-        reagent_type = reagent_types.pop()
+        try:
+            reagent_type = reagent_types.pop()
+        except IndexError:
+            return ''
         sequence = reagent_type.sequence
 
         match = re.match(r"^.+ \((.+)\)$", label)
