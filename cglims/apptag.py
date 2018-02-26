@@ -7,9 +7,9 @@ from cglims.exc import UnknownSequencingTypeError
 
 PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
 TARGETED = set(['MHP', 'EFT', 'CCP'])
-WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX', 'MWR'])
+WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX', 'MWR', 'VWG'])
 ANALYSIS_ONLY = set(['EXX', 'WGX'])
-MICROBIAL = set(['MWX', 'MWG', 'MWL', 'MWR'])
+MICROBIAL = set(['MWX', 'MWG', 'MWL', 'MWR', 'VWG'])
 RNA = set(['RNA', 'RNL'])
 HUMAN = (PANELS | WHOLEGENOME | ANALYSIS_ONLY) - MICROBIAL - RNA
 
