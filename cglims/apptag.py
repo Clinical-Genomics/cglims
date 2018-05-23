@@ -5,7 +5,7 @@ import warnings
 from cglims.constants import READS_PER_1X
 from cglims.exc import UnknownSequencingTypeError
 
-PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
+PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX', 'EXL'])
 TARGETED = set(['MHP', 'EFT', 'CCP'])
 WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX', 'MWR', 'VWG'])
 ANALYSIS_ONLY = set(['EXX', 'WGX'])
