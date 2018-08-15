@@ -5,11 +5,11 @@ import warnings
 from cglims.constants import READS_PER_1X
 from cglims.exc import UnknownSequencingTypeError
 
-PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX'])
+PANELS = set(['EXO', 'EXT', 'MHP', 'EFT', 'CCP', 'EXX', 'EXL'])
 TARGETED = set(['MHP', 'EFT', 'CCP'])
-WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX', 'MWR', 'VWG'])
+WHOLEGENOME = set(['WGS', 'WGT', 'WGL', 'MWG', 'MWL', 'MWX', 'MET', 'MEL', 'WGX', 'MWR', 'VWG', 'MWM', 'VWM'])
 ANALYSIS_ONLY = set(['EXX', 'WGX'])
-MICROBIAL = set(['MWX', 'MWG', 'MWL', 'MWR', 'VWG'])
+MICROBIAL = set(['MWX', 'MWG', 'MWL', 'MWR', 'VWG', 'MWM', 'VWM'])
 RNA = set(['RNA', 'RNL'])
 HUMAN = (PANELS | WHOLEGENOME | ANALYSIS_ONLY) - MICROBIAL - RNA
 
