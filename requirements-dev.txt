@@ -1,6 +1,6 @@
 coverage
 coveralls
-pytest
+pytest>=3.6
 pytest-flask
 pytest-cov
 pytest-pep8
