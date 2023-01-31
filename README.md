@@ -2,6 +2,9 @@
 
 _cglims_ is a tool to interface with our instance of Genologics Clarity LIMS.
 
+**Note**
+This repository will soon be deprecated. Please refer to [cg_lims](https://github.com/Clinical-Genomics/cg_lims) for future requests and issue submissions regarding the LIMS at Clinical Genomics.
+
 ## Background
 
 We have an instance of Clarity LIMS that we mainly use for tracking lab work. However, this is the true source of information for all samples. We use the information extensively also in the downstream bioinformatics tools.
